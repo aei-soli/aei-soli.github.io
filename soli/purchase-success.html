@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Successful — SOLI Solitaire</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #e8e0d0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 16px;
+      max-width: 520px;
+      width: 100%;
+      padding: 48px 40px;
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+
+    .checkmark {
+      width: 72px;
+      height: 72px;
+      background: #1a4a2e;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      font-size: 36px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #f0e8c8;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #a09880;
+      margin-bottom: 36px;
+    }
+
+    .steps {
+      background: #0f1629;
+      border-radius: 12px;
+      padding: 28px 28px;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .steps h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #c8a84a;
+      margin-bottom: 20px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .step:last-child { margin-bottom: 0; }
+
+    .step-num {
+      width: 26px;
+      height: 26px;
+      background: #c8a84a;
+      color: #1a1a2e;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #d0c8b8;
+    }
+
+    .step-text strong {
+      color: #f0e8c8;
+    }
+
+    .email-note {
+      background: #1e2a1e;
+      border: 1px solid #2a4a2a;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 14px;
+      color: #90c890;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .email-note strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #a8e8a8;
+    }
+
+    .footer {
+      font-size: 13px;
+      color: #605850;
+    }
+
+    .footer a {
+      color: #c8a84a;
+      text-decoration: none;
+    }
+
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="checkmark">✓</div>
+    <h1>Payment Successful!</h1>
+    <p class="subtitle">Welcome to SOLI Full Cross-Platform Pass</p>
+
+    <div class="email-note">
+      <strong>Important — note your payment email</strong>
+      You'll need the email address you just paid with to activate your license in the app.
+    </div>
+
+    <div class="steps">
+      <h2>How to activate</h2>
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Open <strong>SOLI Solitaire</strong> on your computer</div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Click <strong>Go Premium</strong> from the main menu</div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Click <strong>"I've paid ✓"</strong></div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Enter the <strong>email address you used to pay</strong> and click Verify</div>
+      </div>
+    </div>
+
+    <p class="footer">
+      Need help? <a href="mailto:contact@aei-digitalsolutions.com">contact@aei-digitalsolutions.com</a>
+    </p>
+  </div>
+</body>
+</html>
