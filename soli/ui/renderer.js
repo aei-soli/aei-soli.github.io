@@ -1558,7 +1558,7 @@ class Renderer {
 
     const panelW = Math.min(360, W - 40);
     const pad    = 20;
-    const panelH = nameInput ? (nameInput.useFirebase ? 320 : 280) : 200;
+    const panelH = nameInput ? (nameInput.useFirebase ? 340 : 300) : 200;
     const panelX = (W - panelW) / 2;
     const panelY = Math.max(8, (H - panelH) / 2);
 
@@ -1591,7 +1591,7 @@ class Renderer {
     }
 
     // ── Daily Challenge name input + submit ──────────────────
-    const inputY = panelY + 90;
+    const inputY = panelY + 116;   // pushed down to clear subtitle text
     const inputW = panelW - pad * 2;
     const inputH = 46;
     const inputX = panelX + pad;
@@ -1604,7 +1604,7 @@ class Renderer {
       ctx.textBaseline = "middle";
       ctx.fillText(
         nameInput.useFirebase ? "Submit to global leaderboard:" : "Your name (optional):",
-        inputX, inputY - 12
+        inputX, inputY - 16
       );
 
       // Input field
