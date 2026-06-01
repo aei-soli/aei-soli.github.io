@@ -89,7 +89,10 @@
     Tell the game engine how tall the host page's header is so the canvas
     is sized correctly (window.innerHeight - 64px).
   -->
-  <script>window._SOLI_HEADER_OFFSET = 64;</script>
+  <script>
+    window._SOLI_HEADER_OFFSET = 64;   // canvas starts below 64px AEI header
+    window._SOLI_ASSET_BASE    = "/soli/"; // card images live at /soli/assets/cards/
+  </script>
 
   <!--
     Capacitor bridge + AdMob plugin (browser context — no native bridge here).

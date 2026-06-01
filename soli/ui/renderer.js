@@ -61,7 +61,10 @@ class Renderer {
       2:"2", 3:"3", 4:"4", 5:"5", 6:"6", 7:"7", 8:"8", 9:"9", 10:"10",
       J:"jack", Q:"queen", K:"king", A:"ace"
     };
-    return `assets/cards/${RANK_NAMES[rank]}_of_${SUIT_NAMES[suit]}.png`;
+    // window._SOLI_ASSET_BASE lets host pages (e.g. play-soli.html at root)
+    // override the asset path prefix. Defaults to "" (relative, works for /soli/).
+    const base = window._SOLI_ASSET_BASE || "";
+    return `${base}assets/cards/${RANK_NAMES[rank]}_of_${SUIT_NAMES[suit]}.png`;
   }
 
   _loadCardImages() {
