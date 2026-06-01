@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>SOLI</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#1b5e3b">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #1b5e3b;
+      /* Support iOS safe areas */
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    canvas {
+      display: block;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    /* Ad banner — sits at the very bottom, above safe-area */
+    #ad-strip {
+      display: none;               /* hidden by default; shown for free users */
+      position: fixed;
+      bottom: 0;
+      bottom: env(safe-area-inset-bottom, 0px);
+      left: 0; right: 0;
+      height: 50px;
+      background: #111;
+      text-align: center;
+      z-index: 10;
+      overflow: hidden;
+    }
+    #ad-strip ins.adsbygoogle {
+      display: inline-block;
+      width: 100%;
+      height: 50px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!--
+    Hidden inputs that trigger the native iOS/iPadOS keyboard.
+    Canvas elements cannot call keyboard; these invisible inputs do it instead.
+    game.js calls .focus() on the right one when the user taps a text field.
+  -->
+  <input id="kb-name" type="text"
+         autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"
+         style="position:fixed;opacity:0;pointer-events:none;left:50%;top:50%;width:1px;height:1px;border:none;outline:none;background:transparent;">
+  <input id="kb-email" type="email"
+         autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false"
+         style="position:fixed;opacity:0;pointer-events:none;left:50%;top:50%;width:1px;height:1px;border:none;outline:none;background:transparent;">
+
+  <!--
+    Ad banner — shown for free users, hidden for premium.
+    Replace data-ad-client and data-ad-slot with your real AdSense values before deploy.
+    The GameUI shows/hides this div based on _isPremium.
+  -->
+  <div id="ad-strip">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+            crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="banner"
+         data-full-width-responsive="false"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <!--
+    Capacitor bridge + AdMob plugin.
+    capacitor.core.js augments (does not replace) the native window.Capacitor injected
+    by the iOS WebView, and defines the capacitorExports global that admob.plugin.js needs.
+    admob.plugin.js registers the AdMob plugin and exposes window.capacitorStripe.
+    Both must load in every context — native and browser.
+  -->
+  <script src="capacitor.core.js"></script>
+  <script src="admob.plugin.js"></script>
+
+  <!-- Domain model (no UI) -->
+  <script src="core/card.js"></script>
+  <script src="core/engine.js"></script>
+  <script src="core/solver.js"></script>
+  <script src="core/stats.js"></script>
+  <script src="core/firebase.js"></script>
+  <script src="core/sound.js"></script>
+
+  <!-- UI layer -->
+  <script src="ui/ads.js"></script>
+  <script src="ui/renderer.js"></script>
+  <script src="ui/input.js"></script>
+  <script src="ui/game.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js");
+    }
+  </script>
+</body>
+</html>

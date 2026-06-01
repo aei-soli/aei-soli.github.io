@@ -1,0 +1,26 @@
+{
+  "name": "SOLI — Solitaire",
+  "short_name": "SOLI",
+  "description": "A premium solitaire card game for analytical minds.",
+  "start_url": "/soli/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1b5e3b",
+  "theme_color": "#1b5e3b",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "en"
+}
