@@ -2,46 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Play SOLI Solitaire Online | AEI Digital Solutions</title>
   <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased h-screen flex flex-col justify-between">
+  <style>
+    /* Prevent page scroll — game fills the area below the header */
+    html, body { overflow: hidden; height: 100%; }
 
-  <header class="border-b border-slate-900 bg-slate-900/60 backdrop-blur px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between shrink-0">
+    /* Canvas sits fixed below the 64px AEI header */
+    #game {
+      display: block;
+      position: fixed;
+      top: 64px;
+      left: 0;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Ad banner — fixed at bottom, above safe-area */
+    #ad-strip {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      height: 50px;
+      background: #111;
+      text-align: center;
+      z-index: 10;
+      overflow: hidden;
+    }
+    #ad-strip ins.adsbygoogle {
+      display: inline-block;
+      width: 100%;
+      height: 50px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased">
+
+  <!-- AEI branded header — fixed at top, z-index above game canvas -->
+  <header class="fixed top-0 left-0 right-0 z-50 border-b border-slate-900 bg-slate-900/95 backdrop-blur px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between shrink-0">
     <div class="flex items-center space-x-3">
       <a href="index.html" class="bg-indigo-600 text-white font-bold p-2 rounded-lg tracking-wider text-sm shadow-md">AEI</a>
       <span class="font-bold text-lg tracking-tight text-white">Digital Solutions</span>
     </div>
     <div class="flex items-center space-x-6 text-sm font-medium">
       <span class="text-emerald-400 font-mono text-xs bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">SOLI Web Runtime v1.0</span>
-      <a href="index.html" class="text-slate-400 hover:text-indigo-400 transition">← Back to Portfolio</a>
+      <a href="index.html" class="text-slate-400 hover:text-indigo-400 transition hidden sm:block">← Back to Portfolio</a>
     </div>
   </header>
 
-  <main class="flex-grow flex items-center justify-center p-4 bg-gradient-to-b from-slate-950 to-slate-900">
-    <div class="w-full max-w-4xl aspect-[16/10] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl relative overflow-hidden flex flex-col items-center justify-center">
-      
-      <div id="game-container" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        <h2 class="text-xl font-bold text-white tracking-tight">Initializing SOLI Engine...</h2>
-        <p class="text-xs text-slate-500 max-w-sm leading-relaxed font-mono">
-          Loading core application scripts and initializing canvas contexts via WebAssembly pipeline.
-        </p>
-      </div>
+  <!-- Game canvas — sized by game.js to fill viewport below header -->
+  <canvas id="game"></canvas>
 
-    </div>
-  </main>
+  <!--
+    Hidden inputs — trigger the native iOS/Android soft keyboard.
+    game.js calls .focus() on the right one when the user taps a text field.
+  -->
+  <input id="kb-name" type="text"
+         autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"
+         style="position:fixed;opacity:0;pointer-events:none;left:50%;top:50%;width:1px;height:1px;border:none;outline:none;background:transparent;">
+  <input id="kb-email" type="email"
+         autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false"
+         style="position:fixed;opacity:0;pointer-events:none;left:50%;top:50%;width:1px;height:1px;border:none;outline:none;background:transparent;">
 
-  <section class="bg-slate-900 border-t border-slate-800 py-4 px-6 flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-4 shrink-0">
-    <div>
-      <h4 class="text-sm font-bold text-white">Want the complete strategic layout?</h4>
-      <p class="text-xs text-slate-400 mt-0.5">Unlock advanced local analytics, native frame rates, and offline support with the Desktop suite.</p>
-    </div>
-    <a href="download.html" class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md">
-      Get Desktop Pass — €4.99
-    </a>
-  </section>
+  <!--
+    Ad banner (web only — Capacitor uses native AdMob instead).
+    Replace data-ad-slot with your real AdSense slot ID before going live.
+  -->
+  <div id="ad-strip">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4986726877058608"
+            crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+         data-ad-client="ca-pub-4986726877058608"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="banner"
+         data-full-width-responsive="false"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <!--
+    Tell the game engine how tall the host page's header is so the canvas
+    is sized correctly (window.innerHeight - 64px).
+  -->
+  <script>window._SOLI_HEADER_OFFSET = 64;</script>
+
+  <!--
+    Capacitor bridge + AdMob plugin (browser context — no native bridge here).
+    These are no-ops on desktop browsers; they provide the Capacitor stub API.
+  -->
+  <script src="soli/capacitor.core.js"></script>
+  <script src="soli/admob.plugin.js"></script>
+
+  <!-- Core game logic -->
+  <script src="soli/core/card.js"></script>
+  <script src="soli/core/engine.js"></script>
+  <script src="soli/core/solver.js"></script>
+  <script src="soli/core/stats.js"></script>
+  <script src="soli/core/firebase.js"></script>
+  <script src="soli/core/sound.js"></script>
+
+  <!-- UI layer -->
+  <script src="soli/ui/ads.js"></script>
+  <script src="soli/ui/renderer.js"></script>
+  <script src="soli/ui/input.js"></script>
+  <script src="soli/ui/game.js"></script>
 
 </body>
 </html>
