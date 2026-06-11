@@ -8,28 +8,8 @@
 "use strict";
 
 // ── Palette ──────────────────────────────────────────────────────────────────
-const PALETTE = {
-  felt:          "#1b5e3b",
-  feltDark:      "#164d30",
-  cardFace:      "#fffef8",
-  cardShadow:    "rgba(0,0,0,0.35)",
-  slotEmpty:     "rgba(255,255,255,0.18)",
-  slotValid:     "rgba(52,211,153,0.28)",
-  borderValid:   "#34d399",
-  borderSelected:"#fbbf24",
-  headerBg:      "rgba(0,0,0,0.28)",
-  footerBg:      "rgba(0,0,0,0.28)",
-  btnNormal:     "rgba(255,255,255,0.22)",
-  btnBorder:     "rgba(255,255,255,0.38)",
-  btnDisabled:   "rgba(255,255,255,0.10)",
-  textPrimary:   "#ffffff",
-  textMuted:     "rgba(255,255,255,0.55)",
-  textDisabled:  "rgba(255,255,255,0.28)",
-  overlayBg:     "rgba(0,0,0,0.60)",
-  winGold:       "#fbbf24",
-  redSuit:       "#c0392b",
-  blackSuit:     "#1a1a2e",
-};
+// PALETTE now lives in ui/skins.js (loaded before this file) so it can be re-skinned
+// at runtime via applySkin(). The renderer just reads the shared global PALETTE.
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -38,6 +18,11 @@ function _fmtTime(secs) {
   const s = secs % 60;
   return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
+
+// Below this card width (CSS px) the renderer draws crisp rank+suit cards instead
+// of photographic art — keeps phone-sized cards (≈25-30px wide) sharp and readable.
+// iPad/desktop cards are wider than this and keep the art.
+const SIMPLE_FACE_MAX_W = 52;
 
 // ── Renderer ─────────────────────────────────────────────────────────────────
 class Renderer {
@@ -49,29 +34,53 @@ class Renderer {
     this.ctx    = canvas.getContext("2d");
     this.layout = null;   // populated by computeLayout()
     this._cardImgs = {};  // keyed by card.toString() e.g. "2H"
+    this._cardBackImg = null;
     this._imgsReady = false;
-    this._loadCardImages();
+    this._activePack = "classic";
+    this._clock = 0;      // ambient animation time (ms) set by game.js; drives card sheen
+    this._priceStr = null;  // localized store price for the Go Premium screen
+    this._cardStyle = "auto";  // "auto" (size-based) | "simple" | "art"
+    this.loadCardPack("classic");
   }
 
-  // ── Card image loading ───────────────────────────────────────────────────
+  // ── Ambient animation clock ────────────────────────────────────────────────
+  /** game.js feeds a monotonically increasing timestamp here for skin animations. */
+  setClock(ms) { this._clock = ms; }
 
-  _cardFilename(suit, rank) {
+  /** Localized store price string (e.g. "$4.99", "4,99 €") for the Go Premium screen. */
+  setPriceString(s) { this._priceStr = s || null; }
+
+  // ── Card image loading (per pack) ──────────────────────────────────────────
+
+  _cardFilename(suit, rank, dir) {
     const SUIT_NAMES = { H: "hearts", D: "diamonds", C: "clubs", S: "spades" };
     const RANK_NAMES = {
       2:"2", 3:"3", 4:"4", 5:"5", 6:"6", 7:"7", 8:"8", 9:"9", 10:"10",
       J:"jack", Q:"queen", K:"king", A:"ace"
     };
     // window._SOLI_ASSET_BASE lets host pages (e.g. play-soli.html at root)
-    // override the asset path prefix. Defaults to "" (relative, works for /soli/).
+    // override the asset path prefix. `dir` is the pack subfolder ("" = default set).
     const base = window._SOLI_ASSET_BASE || "";
-    return `${base}assets/cards/${RANK_NAMES[rank]}_of_${SUIT_NAMES[suit]}.png`;
+    return `${base}assets/cards/${dir || ""}${RANK_NAMES[rank]}_of_${SUIT_NAMES[suit]}.png`;
   }
 
-  _loadCardImages() {
+  /**
+   * Load (or switch to) a card-face pack. Images replace this._cardImgs in place.
+   * @param {string} packId   key into CARD_PACKS
+   * @param {function|null} onReady  called once all faces for this pack have loaded
+   */
+  loadCardPack(packId, onReady = null) {
+    const pack = (typeof getCardPack === "function") ? getCardPack(packId)
+                                                     : { dir: "", back: "back.png" };
+    this._activePack = packId;
+    this._imgsReady  = false;
+    const dir = pack.dir || "";
+
     const suits = ["H","D","C","S"];
     const ranks = [2,3,4,5,6,7,8,9,10,"J","Q","K","A"];
     let loaded = 0;
     const total = suits.length * ranks.length;
+    const imgs = {};
     for (const suit of suits) {
       for (const rank of ranks) {
         const key = `${rank}${suit}`;
@@ -80,14 +89,30 @@ class Renderer {
           loaded++;
           if (loaded === total) {
             this._imgsReady = true;
-            // Trigger a full redraw now that all card images are ready
-            if (this._onImgsReady) this._onImgsReady();
+            this._cardImgs  = imgs;          // swap in atomically when complete
+            if (onReady) onReady();
+            else if (this._onImgsReady) this._onImgsReady();
           }
         };
-        img.onerror = () => { loaded++; }; // fall back to text if missing
-        img.src = this._cardFilename(suit, rank);
-        this._cardImgs[key] = img;
+        img.onerror = () => {
+          loaded++;
+          if (loaded === total) { this._cardImgs = imgs; if (onReady) onReady(); else if (this._onImgsReady) this._onImgsReady(); }
+        };
+        img.src = this._cardFilename(suit, rank, dir);
+        imgs[key] = img;
       }
+    }
+    // Keep showing the previous pack's images until the new set finishes.
+    if (Object.keys(this._cardImgs).length === 0) this._cardImgs = imgs;
+
+    // Card back (optional; used by face-down draw / future deal animation).
+    if (pack.back) {
+      const back = new Image();
+      back.onload  = () => { this._cardBackImg = back; };
+      back.onerror = () => { this._cardBackImg = null; };
+      back.src = `${window._SOLI_ASSET_BASE || ""}assets/cards/${dir}${pack.back}`;
+    } else {
+      this._cardBackImg = null;
     }
   }
 
@@ -99,26 +124,46 @@ class Renderer {
    * @param {number} H  logical height (CSS px)
    */
   computeLayout(W, H) {
-    const COLS       = 13;
-    const ROWS       = 4;
-    const HEADER_H   = 62;
-    const FOOTER_H   = 68;
-    const BOARD_PAD  = 6;   // horizontal & vertical board padding
-    const CELL_GAP   = 4;   // gap between cards
+    const COLS = 13;
+    const ROWS = 4;
 
-    // Available space for the board grid
+    // Compact chrome on short viewports (landscape phones) so the board gets the
+    // maximum possible space — thick header/footer were shrinking the cards and
+    // leaving wasted space. Use the SHORTER side so it's robust to orientation timing.
+    const compact   = Math.min(W, H) < 520;
+    // When a native banner is present it lives INSIDE the footer band (centered),
+    // flanked by the buttons — so the band must be tall enough to hold the banner,
+    // and the board extends straight down to the top of that band (no separate strip).
+    const bannerPresent = !!(this._bannerInfo && this._bannerInfo.present);
+    const bannerH   = bannerPresent ? (this._bannerInfo.h || 50) : 0;
+    // The native banner lives INSIDE the footer band so the deck fills the whole
+    // screen (no separate strip). iOS centers the banner and the buttons flank it;
+    // Android pins the banner bottom-LEFT (plugin can't offset it), so there the
+    // buttons are clustered on the RIGHT to clear it — see _buildButtons.
+    const HEADER_H  = compact ? 34 : 58;
+    const FOOTER_H  = compact
+                    ? (bannerPresent ? Math.max(48, bannerH - 2) : 38)
+                    : (bannerPresent ? Math.max(60, bannerH + 8) : 64);
+    const BOARD_PAD = compact ? 2  : 6;
+    const CELL_GAP  = compact ? 2  : 4;
+
     const availW = W - BOARD_PAD * 2;
     const availH = H - HEADER_H - FOOTER_H - BOARD_PAD * 2;
 
-    // Cell and card dimensions
-    const cellW  = availW / COLS;
-    const cardW  = cellW - CELL_GAP;
-    // Card height: standard ratio ≈ 1.43; but also constrained by row count
-    const maxCardH = (availH / ROWS) - CELL_GAP;
-    const cardH  = Math.min(Math.floor(cardW * 1.43), Math.floor(maxCardH));
+    // FILL the available area as fully as possible, then clamp the card aspect ratio
+    // to [1.2, 1.5] so cards stay card-like (not squat, not over-elongated). This makes
+    // the deck cover the screen instead of sitting small with big side margins.
+    let cardW = availW / COLS - CELL_GAP;
+    let cardH = availH / ROWS - CELL_GAP;
+    if (cardH < cardW * 1.2)      cardW = cardH / 1.2;   // area too short → keep min ratio (slim side margins)
+    else if (cardH > cardW * 1.5) cardH = cardW * 1.5;   // area too tall  → cap height (vertical margins)
+    cardW = Math.max(8, Math.floor(cardW));
+    cardH = Math.max(8, Math.floor(cardH));
+
+    const cellW  = cardW + CELL_GAP;
     const rowH   = cardH + CELL_GAP;
 
-    // Top-left of the board grid (centred within available space)
+    // Centre the grid within the available space (gaps on the slack axis).
     const boardX = BOARD_PAD + (availW - cellW * COLS) / 2;
     const boardY = HEADER_H + BOARD_PAD + (availH - rowH * ROWS) / 2;
 
@@ -126,6 +171,7 @@ class Renderer {
       W, H,
       COLS, ROWS,
       HEADER_H, FOOTER_H,
+      footerY: H - FOOTER_H,
       BOARD_PAD, CELL_GAP,
       cellW, cardW, cardH, rowH,
       boardX, boardY,
@@ -189,6 +235,8 @@ class Renderer {
     const { ctx } = this;
     const { W, H } = this.layout;
 
+    this._overlayFit = null;   // reset each frame; overlays set it if they scale to fit
+
     // Felt background
     ctx.fillStyle = PALETTE.felt;
     ctx.fillRect(0, 0, W, H);
@@ -198,8 +246,8 @@ class Renderer {
     const buttons = this._drawFooter(engine);
     this.layout.buttons = buttons;   // store for hit-testing
 
-    // Flying card drawn on top of the board
-    if (anim) {
+    // Flying card drawn on top of the board (skipFly = building the static buffer)
+    if (anim && anim.card && !anim.skipFly) {
       this._drawCard(anim.card, anim.x, anim.y, "normal");
     }
 
@@ -236,7 +284,7 @@ class Renderer {
     } else if (uiState.screen === "highscores") {
       this._drawHighScores(uiState.highScores, uiState.hsTab || "regular");
     } else if (uiState.screen === "themes") {
-      this._drawThemes(uiState.settings.theme || "green");
+      this._drawThemes(uiState);
     } else if (uiState.screen === "privacy") {
       this._drawPrivacy();
     } else if (uiState.screen === "premium") {
@@ -393,10 +441,14 @@ class Renderer {
     ctx.fill();
     ctx.restore();
 
-    // Draw card image if loaded, otherwise fall back to text
+    // Choose face style. On small cards (phones) the crisp drawn rank+suit reads
+    // far better than shrunk photographic art; on big cards (iPad/desktop) use art.
+    //   _cardStyle: "auto" (default, size-based) | "simple" (always drawn) | "art"
+    const useSimple = (this._cardStyle === "simple") ||
+                      (this._cardStyle !== "art" && cardW < SIMPLE_FACE_MAX_W);
     const imgKey = `${card.rank}${card.suit}`;
     const img = this._cardImgs[imgKey];
-    if (img && img.complete && img.naturalWidth > 0) {
+    if (!useSimple && img && img.complete && img.naturalWidth > 0) {
       // Clip to rounded rect so image doesn't overflow card corners
       ctx.save();
       this._rrect(x, y, cardW, cardH, R);
@@ -404,24 +456,14 @@ class Renderer {
       ctx.drawImage(img, x, y, cardW, cardH);
       ctx.restore();
     } else {
-      // Fallback: text rendering
-      const suitColor = (card.suit === "H" || card.suit === "D")
-                        ? PALETTE.redSuit : PALETTE.blackSuit;
-      const symbol    = SUIT_SYMBOLS[card.suit];
-      const rankStr   = String(RANK_DISP[card.rank]);
-      const cornerSize = Math.max(9, Math.floor(cardW * 0.27));
-      ctx.fillStyle    = suitColor;
-      ctx.textBaseline = "top";
-      ctx.textAlign    = "left";
-      ctx.font         = `bold ${cornerSize}px system-ui, -apple-system, sans-serif`;
-      ctx.fillText(rankStr, x + 4, y + 3);
-      ctx.font         = `${Math.floor(cornerSize * 0.88)}px system-ui, -apple-system, sans-serif`;
-      ctx.fillText(symbol, x + 4, y + 4 + cornerSize);
-      const centreSize = Math.floor(cardW * 0.42);
-      ctx.font         = `bold ${centreSize}px system-ui, -apple-system, sans-serif`;
-      ctx.textAlign    = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(symbol, x + cardW / 2, y + cardH / 2);
+      this._drawSimpleFace(card, x, y, cardW, cardH);
+    }
+
+    // Premium skin "sheen": a slow diagonal gloss sweeping across the card.
+    // Enabled when the active skin declares anim.sheen (see ui/skins.js); driven by
+    // the ambient clock set from game.js. Cheap, subtle, and skipped otherwise.
+    if (this._skinAnim && this._skinAnim.sheen) {
+      this._drawCardSheen(x, y, cardW, cardH, R);
     }
 
     // Selection/valid highlight border drawn on top of image
@@ -436,6 +478,176 @@ class Renderer {
       this._rrect(x, y, cardW, cardH, R);
       ctx.stroke();
     }
+  }
+
+  /** Set the active skin's animation descriptor (e.g. { sheen:true, move:"arc" }). */
+  setSkinAnim(anim) { this._skinAnim = anim || null; }
+
+  // ── Move-animation buffering (perf) ────────────────────────────────────────
+  // Redrawing the whole board (52 cards) every animation frame is expensive on a
+  // large Retina iPad canvas. Instead we render the static board (destination cell
+  // hidden, no flying card) ONCE to an offscreen buffer, then each frame just blit
+  // the buffer + draw the single flying card.
+
+  /** Render the static board to the offscreen buffer. Call once when a move starts. */
+  buildAnimBuffer(engine, uiState, dstRow, dstCol) {
+    try {
+      const buf = this._animBuf || (this._animBuf = document.createElement("canvas"));
+      buf.width  = this.canvas.width;
+      buf.height = this.canvas.height;
+      const dpr  = window.devicePixelRatio || 1;
+      const bctx = buf.getContext("2d");
+      bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const realCtx = this.ctx;
+      this.ctx = bctx;
+      this.draw(engine, uiState, { dstRow, dstCol, skipFly: true });
+      this.ctx = realCtx;
+      this._animBufOK = true;
+    } catch (_) {
+      this._animBufOK = false;
+    }
+  }
+
+  /** Blit the cached static board + draw the flying card. Falls back to false if no buffer. */
+  blitAnimFrame(flyingCard) {
+    if (!this._animBufOK || !this._animBuf) return false;
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);                       // device pixels for the blit
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.drawImage(this._animBuf, 0, 0);
+    ctx.restore();                                            // back to DPR transform
+    this._drawCard(flyingCard.card, flyingCard.x, flyingCard.y, "normal");
+    return true;
+  }
+
+  /** Drop the cached buffer when a move finishes. */
+  clearAnimBuffer() { this._animBufOK = false; }
+
+  // ── Overlay scale-to-fit ───────────────────────────────────────────────────
+  // Any centered overlay taller than the viewport (common in landscape) is scaled
+  // down uniformly around the screen centre so all of it — including buttons — is
+  // visible. Taps are mapped back through the same scale via mapOverlayTap().
+  // REQUIRES the overlay to use a CENTERED panelY = (H - panelH)/2 (not clamped).
+  _fitBegin(panelH) {
+    const ctx = this.ctx, W = this.layout.W, H = this.layout.H;
+    const max = H - 8;
+    const s = panelH > max ? max / panelH : 1;
+    if (s < 1) {
+      this._overlayFit = { s, cx: W / 2, cy: H / 2 };
+      ctx.save();
+      ctx.translate(W / 2, H / 2); ctx.scale(s, s); ctx.translate(-W / 2, -H / 2);
+      return true;
+    }
+    this._overlayFit = null;
+    return false;
+  }
+  _fitEnd(applied) { if (applied) this.ctx.restore(); }
+
+  /** Map a screen tap into the active overlay's (possibly scaled) coordinate space. */
+  mapOverlayTap(px, py) {
+    const f = this._overlayFit;
+    if (!f) return [px, py];
+    return [f.cx + (px - f.cx) / f.s, f.cy + (py - f.cy) / f.s];
+  }
+
+  /** Force card face style: "auto" (size-based, default), "simple" (drawn), or "art". */
+  setCardStyle(style) { this._cardStyle = style || "auto"; }
+
+  /**
+   * Draw a clean, crisp card face with rank + suit (no photographic art). Used for
+   * small cards (phones) and as the fallback when art isn't loaded. Reads well at
+   * tiny sizes: top-left index, large centre pip, mirrored bottom-right index when
+   * there's room.
+   */
+  _drawSimpleFace(card, x, y, w, h) {
+    const { ctx } = this;
+    const red    = (card.suit === "H" || card.suit === "D");
+    const color  = red ? PALETTE.redSuit : PALETTE.blackSuit;
+    const symbol = SUIT_SYMBOLS[card.suit];
+    const rank   = String(RANK_DISP[card.rank]);
+    const pad    = Math.max(2, Math.round(w * 0.08));
+    // Compact, single-line index (e.g. "9♦") sized off the card's SMALLER dimension
+    // so it stays in the corner and never collides with the centre pip on short cards.
+    const idx    = Math.max(8, Math.floor(Math.min(w, h) * 0.26));
+    const suF    = Math.floor(idx * 0.9);
+
+    const drawIndex = () => {
+      ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.font = `bold ${idx}px system-ui, -apple-system, sans-serif`;
+      ctx.fillText(rank, 0, 0);
+      const rw = ctx.measureText(rank).width;
+      ctx.font = `${suF}px system-ui, -apple-system, sans-serif`;
+      ctx.fillText(symbol, rw + Math.max(1, idx * 0.08), idx - suF);
+    };
+
+    ctx.fillStyle = color;
+
+    // Top-left index
+    ctx.save();
+    ctx.translate(x + pad, y + pad);
+    drawIndex();
+    ctx.restore();
+
+    // Centre pip — sized so it sits clear of the corner index
+    const c = Math.floor(Math.min(w * 0.52, h * 0.5));
+    ctx.font = `bold ${c}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.globalAlpha = 0.9;
+    ctx.fillText(symbol, x + w / 2, y + h * 0.56);
+    ctx.globalAlpha = 1;
+
+    // Mirrored bottom-right index — only on tall cards (iPad/desktop), where there's
+    // room below the centre pip. Skipped on short phone cards to avoid overlap.
+    if (h >= 70) {
+      ctx.save();
+      ctx.translate(x + w - pad, y + h - pad);
+      ctx.rotate(Math.PI);
+      drawIndex();
+      ctx.restore();
+    }
+  }
+
+  /** Moving gloss band, used by premium skins. Clipped to the card. */
+  _drawCardSheen(x, y, w, h, R) {
+    const { ctx } = this;
+    // Sweep period ~3.2s; offset by card x so cards don't all flash in lockstep.
+    const period = 3200;
+    const phase  = (((this._clock + x * 2) % period) / period); // 0..1
+    const band   = phase * (w + h) - h * 0.5;                    // diagonal position
+    ctx.save();
+    this._rrect(x, y, w, h, R);
+    ctx.clip();
+    const g = ctx.createLinearGradient(x + band - 24, y, x + band + 24, y + h);
+    g.addColorStop(0,   "rgba(255,255,255,0)");
+    g.addColorStop(0.5, "rgba(255,255,255,0.18)");
+    g.addColorStop(1,   "rgba(255,255,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x, y, w, h);
+    ctx.restore();
+  }
+
+  /**
+   * Draw a face-down card (card back). Subroutine slot for future deal/shuffle
+   * animation and any face-down variants. Uses the active pack's back image if
+   * present, else a themed placeholder.
+   */
+  _drawCardBack(x, y) {
+    const { ctx } = this;
+    const { cardW, cardH } = this.layout;
+    const R = 7;
+    ctx.save();
+    ctx.shadowColor = PALETTE.cardShadow; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+    if (this._cardBackImg && this._cardBackImg.complete && this._cardBackImg.naturalWidth > 0) {
+      this._rrect(x, y, cardW, cardH, R); ctx.clip();
+      ctx.drawImage(this._cardBackImg, x, y, cardW, cardH);
+    } else {
+      ctx.fillStyle = PALETTE.feltDark;
+      this._rrect(x, y, cardW, cardH, R); ctx.fill();
+      ctx.strokeStyle = PALETTE.borderSelected; ctx.lineWidth = 2;
+      this._rrect(x + 4, y + 4, cardW - 8, cardH - 8, R - 2); ctx.stroke();
+    }
+    ctx.restore();
   }
 
   // ── Empty slot ───────────────────────────────────────────────────────────
@@ -475,8 +687,8 @@ class Renderer {
    */
   _drawFooter(engine) {
     const { ctx } = this;
-    const { W, H, FOOTER_H } = this.layout;
-    const footerY = H - FOOTER_H;
+    const { W, FOOTER_H } = this.layout;
+    const footerY = this.layout.footerY;
 
     ctx.fillStyle = PALETTE.footerBg;
     ctx.fillRect(0, footerY, W, FOOTER_H);
@@ -487,37 +699,83 @@ class Renderer {
   }
 
   _buildButtons(engine, footerY, footerH, W) {
-    const BTN_H  = 44;
+    const BTN_H  = Math.min(40, footerH - 6);   // fit within a slim footer
     const BTN_Y  = footerY + (footerH - BTN_H) / 2;
     const PAD    = 8;
+    const ICON_W = BTN_H;                        // square icon buttons (undo/redo)
 
-    const defs = [
-      { id: "undo",      label: "Undo",       disabled: engine.history.length === 0 },
-      { id: "redo",      label: "Redo",       disabled: engine.future.length === 0 },
-      { id: "new",       label: "New Game",   disabled: false },
-      {
-        id: "nextround",
-        label: "End Round",
-        disabled: engine.gameWon,
-      },
-    ];
+    const undo = { id: "undo",      icon: "undo", disabled: engine.history.length === 0 };
+    const redo = { id: "redo",      icon: "redo", disabled: engine.future.length === 0 };
+    const newg = { id: "new",       label: "New Game",  disabled: false };
+    const next = { id: "nextround", label: "End Round", disabled: engine.gameWon };
+    for (const b of [undo, redo, newg, next]) { b.y = BTN_Y; b.h = BTN_H; }
 
-    const count  = defs.length;
-    const btnW   = (W - PAD * (count + 1)) / count;
+    const bannerPresent = !!(this._bannerInfo && this._bannerInfo.present);
+    const platform      = (this._bannerInfo && this._bannerInfo.platform) || "ios";
+    // Only flank the banner when it's reliably centered (iOS). On Android the banner
+    // gets its own bottom strip, so the footer here is a normal full-width button row.
+    const flankBanner   = bannerPresent && platform !== "android";
 
-    return defs.map((d, i) => ({
-      ...d,
-      x: PAD + i * (btnW + PAD),
-      y: BTN_Y,
-      w: btnW,
-      h: BTN_H,
-    }));
+    if (flankBanner) {
+      // Bottom row = [undo][redo] … <centered banner ad> … [New Game][End Round].
+      // Keep a clear zone in the middle for the native banner overlay.
+      // Extra side margin: the native banner is centered on the SCREEN, but these
+      // buttons are placed on the CANVAS, which is inset by the landscape side
+      // safe-areas — so the banner can drift a little off the canvas centre. Pad
+      // generously to guarantee no overlap on either side.
+      const bw    = Math.min(this._bannerInfo.w || 320, W * 0.5);
+      const clear = Math.min(W - 200, bw + 60);   // keep ≥100px per side for buttons
+      const leftEnd    = (W - clear) / 2;        // left zone: 0 .. leftEnd
+      const rightStart = (W + clear) / 2;        // right zone: rightStart .. W
+
+      // Left: undo / redo icon buttons
+      undo.x = PAD;                 undo.w = ICON_W;
+      redo.x = PAD * 2 + ICON_W;    redo.w = ICON_W;
+
+      // Right: New Game / End Round text buttons, filling the right zone
+      const rW = W - rightStart - PAD;
+      const tw = Math.max(40, (rW - PAD) / 2);
+      const short = tw < 92;
+      newg.label = short ? "New" : "New Game";
+      next.label = short ? "End" : "End Round";
+      newg.x = rightStart;          newg.w = tw;
+      next.x = rightStart + tw + PAD; next.w = tw;
+
+      this.layout.adSlot = { x: leftEnd, y: footerY, w: clear, h: footerH };
+      return [undo, redo, newg, next];
+    }
+
+    if (bannerPresent && platform === "android") {
+      // Android pins the native banner to the bottom-LEFT and the AdMob plugin has no
+      // way to offset it horizontally — so cluster all four buttons on the RIGHT, clear
+      // of the banner. Deck still fills the screen (banner sits in the footer band).
+      const tw = Math.max(80, Math.min(130, (W * 0.5 - PAD * 4) / 2));
+      const groupW = ICON_W * 2 + tw * 2 + PAD * 3;
+      const startX = W - PAD - groupW;
+      undo.x = startX;                      undo.w = ICON_W;
+      redo.x = startX + ICON_W + PAD;       redo.w = ICON_W;
+      newg.x = startX + ICON_W * 2 + PAD * 2; newg.w = tw;
+      next.x = newg.x + tw + PAD;           next.w = tw;
+      this.layout.adSlot = null;
+      return [undo, redo, newg, next];
+    }
+
+    // No banner (premium / non-Capacitor): icons left, text actions fill the rest.
+    undo.x = PAD;                 undo.w = ICON_W;
+    redo.x = PAD * 2 + ICON_W;    redo.w = ICON_W;
+    const textStart = PAD * 3 + ICON_W * 2;
+    const remaining = W - textStart - PAD;
+    const tw = (remaining - PAD) / 2;
+    newg.x = textStart;            newg.w = tw;
+    next.x = textStart + tw + PAD; next.w = tw;
+    this.layout.adSlot = null;
+    return [undo, redo, newg, next];
   }
 
   _drawButton(btn) {
     const { ctx } = this;
-    const { x, y, w, h, label, disabled } = btn;
-    const R = 11;
+    const { x, y, w, h, label, disabled, icon } = btn;
+    const R = 10;
 
     // Background
     ctx.fillStyle = disabled ? PALETTE.btnDisabled : PALETTE.btnNormal;
@@ -531,12 +789,54 @@ class Renderer {
       ctx.stroke();
     }
 
+    if (icon) {
+      this._drawArrowIcon(x + w / 2, y + h / 2, Math.min(w, h) * 0.28,
+                          icon === "redo", disabled);
+      return;
+    }
+
     // Label
     ctx.fillStyle    = disabled ? PALETTE.textDisabled : PALETTE.textPrimary;
     ctx.font         = `${w < 90 ? 13 : 14}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign    = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(label, x + w / 2, y + h / 2);
+  }
+
+  /** Circular-arrow glyph. redo=clockwise (head on right), undo=counter-clockwise (head on left). */
+  _drawArrowIcon(cx, cy, r, redo, disabled) {
+    const { ctx } = this;
+    const col = disabled ? PALETTE.textDisabled : PALETTE.textPrimary;
+    ctx.save();
+    ctx.strokeStyle = col;
+    ctx.fillStyle   = col;
+    ctx.lineWidth   = Math.max(2, r * 0.34);
+    ctx.lineCap     = "round";
+
+    // ~300° arc with the gap (and arrowhead) near the top.
+    const gap = 1.0;                              // radians of opening
+    const a0  = -Math.PI / 2 + gap / 2;           // just clockwise of top
+    const a1  = a0 + (Math.PI * 2 - gap);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, a0, a1, false);
+    ctx.stroke();
+
+    // Arrowhead at one open end, pointing tangentially.
+    const a   = redo ? a1 : a0;
+    const px  = cx + r * Math.cos(a);
+    const py  = cy + r * Math.sin(a);
+    // tangent: forward (+) for redo end, backward (-) for undo end
+    const dir = redo ? 1 : -1;
+    const tx  = -Math.sin(a) * dir, ty = Math.cos(a) * dir;   // tangent (head points this way)
+    const nx  =  Math.cos(a),       ny = Math.sin(a);         // radial
+    const hd  = r * 0.85, hw = r * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(px + tx * hd, py + ty * hd);                   // tip
+    ctx.lineTo(px + nx * hw, py + ny * hw);                   // outer corner
+    ctx.lineTo(px - nx * hw, py - ny * hw);                   // inner corner
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   }
 
   // ── Menu overlay ─────────────────────────────────────────────────────────
@@ -548,45 +848,47 @@ class Renderer {
     ctx.fillStyle = PALETTE.overlayBg;
     ctx.fillRect(0, 0, W, H);
 
-    const panelW = Math.min(340, W - 40);
-    const itemH  = 42;
-    const gap    = 6;
-    const sepH   = 16;
-    const pad    = 16;
-    const soundH = 48;   // inline sound toggle row
+    // Wider panel — two columns of actions side by side.
+    const panelW = Math.min(460, W - 32);
+    let   itemH  = 40;
+    let   gap    = 8;
+    let   sepH   = 14;
+    let   pad    = 16;
+    let   soundH = 46;   // inline sound toggle row
+    let   colGap = 10;
+    let   fS     = 1;    // font scale
 
-    const groups = [
-      [
-        { id: "resume",         label: "Resume",         accent: true },
-      ],
-      [
-        { id: "undo",           label: "Undo",           disabled: !engine.history.length },
-        { id: "redo",           label: "Redo",           disabled: !engine.future.length },
-        { id: "hint",
-          label: uiState.isPremium ? "Show Hint" : `Show Hint (${Math.max(0, 3 - (uiState.hintsUsed || 0))} left)`,
-          disabled: engine.isLocked || engine.gameWon },
-      ],
-      [
-        { id: "newgame",        label: "New Game" },
-        { id: "dailychallenge", label: "Daily Challenge" },
-      ],
-      [
-        { id: "highscores",     label: "High Scores" },
-        { id: "statistics",     label: "Statistics" },
-      ],
-      [
-        { id: "themes",         label: "Themes" },
-        { id: "gopremium",      label: "⭐  Go Premium" },
-        { id: "howtoplay",      label: "How to Play" },
-        { id: "privacy",        label: "Privacy" },
-      ],
+    // Full-width row(s) first, then the rest laid out in a 2-column grid.
+    const resume = { id: "resume", label: "Resume", accent: true };
+    const grid = [
+      { id: "undo",           label: "Undo",           disabled: !engine.history.length },
+      { id: "redo",           label: "Redo",           disabled: !engine.future.length },
+      { id: "hint",
+        label: uiState.isPremium ? "Show Hint" : `Hint (${Math.max(0, 3 - (uiState.hintsUsed || 0))})`,
+        disabled: engine.isLocked || engine.gameWon },
+      { id: "newgame",        label: "New Game" },
+      { id: "dailychallenge", label: "Daily Challenge" },
+      { id: "highscores",     label: "High Scores" },
+      { id: "statistics",     label: "Statistics" },
+      { id: "themes",         label: "Themes" },
+      { id: "gopremium",      label: "⭐  Go Premium" },
+      { id: "howtoplay",      label: "How to Play" },
+      { id: "privacy",        label: "Privacy" },
     ];
+    const rows = Math.ceil(grid.length / 2);
 
-    const totalItems = groups.reduce((s, g) => s + g.length, 0);
-    const totalSeps  = groups.length - 1;
-    // +1 group separator worth of space for the sound toggle
-    const panelH = pad * 2 + totalItems * (itemH + gap) - gap
-                 + totalSeps * sepH + soundH + sepH;
+    const panelHnat = (m) => m.pad * 2 + m.soundH + m.sepH
+                           + m.itemH + m.gap                       // resume row
+                           + rows * (m.itemH + m.gap) - m.gap;     // grid rows
+
+    // Scale-to-fit if still too tall for the screen.
+    let panelH = panelHnat({ pad, itemH, gap, sepH, soundH });
+    const maxH = H - 12;
+    if (panelH > maxH) {
+      fS = maxH / panelH;
+      itemH *= fS; gap *= fS; sepH *= fS; pad *= fS; soundH *= fS;
+      panelH = panelHnat({ pad, itemH, gap, sepH, soundH });
+    }
 
     const panelX = (W - panelW) / 2;
     const panelY = Math.max(6, (H - panelH) / 2);
@@ -600,23 +902,40 @@ class Renderer {
     ctx.stroke();
 
     const menuBtns = [];
-    let curY = panelY + pad;
-
-    // ── Sound SFX toggle row ─────────────────────────────────────
     const bx = panelX + pad;
     const bw = panelW - pad * 2;
+    let curY = panelY + pad;
+
+    // Helper: paint one item box + label, register hit target.
+    const paintItem = (item, ix, iy, iw) => {
+      if (item.accent)        ctx.fillStyle = "rgba(255,255,255,0.24)";
+      else if (item.disabled) ctx.fillStyle = "rgba(255,255,255,0.06)";
+      else                    ctx.fillStyle = "rgba(0,0,0,0.22)";
+      this._rrect(ix, iy, iw, itemH, 10);
+      ctx.fill();
+
+      ctx.fillStyle    = item.disabled ? PALETTE.textDisabled : PALETTE.textPrimary;
+      ctx.font         = `${item.accent ? "bold " : ""}${Math.round(16 * fS)}px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign    = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(item.label, ix + iw / 2, iy + itemH / 2);
+
+      if (!item.disabled) menuBtns.push({ id: item.id, x: ix, y: iy, w: iw, h: itemH });
+    };
+
+    // ── Sound SFX toggle row ─────────────────────────────────────
     ctx.fillStyle = "rgba(0,0,0,0.18)";
     this._rrect(bx, curY, bw, soundH, 10);
     ctx.fill();
 
     ctx.fillStyle    = PALETTE.textPrimary;
-    ctx.font         = "16px system-ui, -apple-system, sans-serif";
+    ctx.font         = `${Math.round(16 * fS)}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign    = "left";
     ctx.textBaseline = "middle";
     ctx.fillText("SFX", bx + 14, curY + soundH / 2);
 
     const sfxOn = uiState.settings && uiState.settings.sound;
-    const tW = 48, tH = 26;
+    const tW = 48 * fS, tH = 26 * fS;
     const tx = bx + bw - 14 - tW;
     const ty = curY + (soundH - tH) / 2;
     ctx.fillStyle = sfxOn ? "#34d399" : "rgba(255,255,255,0.2)";
@@ -631,42 +950,21 @@ class Renderer {
     menuBtns.push({ id: "_sound", x: bx, y: curY, w: bw, h: soundH });
 
     curY += soundH;
-
-    // Separator after sound row
     this._menuSep(panelX, curY, panelW, pad, sepH);
     curY += sepH;
 
-    // ── Item groups ──────────────────────────────────────────────
-    groups.forEach((group, gi) => {
-      group.forEach((item) => {
-        const by = curY;
-        if (item.accent) {
-          ctx.fillStyle = "rgba(255,255,255,0.24)";
-        } else if (item.disabled) {
-          ctx.fillStyle = "rgba(255,255,255,0.06)";
-        } else {
-          ctx.fillStyle = "rgba(0,0,0,0.22)";
-        }
-        this._rrect(bx, by, bw, itemH, 10);
-        ctx.fill();
+    // ── Resume (full width) ──────────────────────────────────────
+    paintItem(resume, bx, curY, bw);
+    curY += itemH + gap;
 
-        ctx.fillStyle    = item.disabled ? PALETTE.textDisabled : PALETTE.textPrimary;
-        ctx.font         = `${item.accent ? "bold " : ""}16px system-ui, -apple-system, sans-serif`;
-        ctx.textAlign    = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(item.label, bx + bw / 2, by + itemH / 2);
-
-        if (!item.disabled) {
-          menuBtns.push({ id: item.id, x: bx, y: by, w: bw, h: itemH });
-        }
-        curY += itemH + gap;
-      });
-
-      if (gi < groups.length - 1) {
-        curY -= gap;
-        this._menuSep(panelX, curY, panelW, pad, sepH);
-        curY += sepH;
-      }
+    // ── Two-column grid ──────────────────────────────────────────
+    const colW = (bw - colGap) / 2;
+    grid.forEach((item, i) => {
+      const col = i % 2;
+      const row = (i - col) / 2;
+      const ix  = bx + col * (colW + colGap);
+      const iy  = curY + row * (itemH + gap);
+      paintItem(item, ix, iy, colW);
     });
 
     this.layout.menuBtns = menuBtns;
@@ -716,7 +1014,8 @@ class Renderer {
     const pad    = 20;
     const panelH = pad * 2 + 52 + rows.length * rowH + 52; // title + rows + close btn
     const panelX = (W - panelW) / 2;
-    const panelY = Math.max(8, (H - panelH) / 2);
+    const panelY = (H - panelH) / 2;
+    const _fit = this._fitBegin(panelH);   // scale to fit landscape
 
     ctx.fillStyle = "#1e6b40";
     this._rrect(panelX, panelY, panelW, panelH, 18);
@@ -772,6 +1071,7 @@ class Renderer {
     ctx.fillText("Close", cbx + cbw / 2, cby + 20);
 
     this.layout.statsCloseBtn = { x: cbx, y: cby, w: cbw, h: 40 };
+    this._fitEnd(_fit);
   }
 
   hitTestStatsClose(px, py) {
@@ -882,6 +1182,7 @@ class Renderer {
     this.layout.premiumCloseBtn    = null;
     this.layout.premiumBuyBtn      = null;
     this.layout.premiumActivateBtn = null;
+    this.layout.premiumRestoreBtn  = null;
     this.layout.premiumBackBtn     = null;
     this.layout.premiumEmailInput  = null;
     this.layout.premiumCheckBtn    = null;
@@ -917,7 +1218,8 @@ class Renderer {
     // ── Activate purchase screen ─────────────────────────────────────
     if (ps.step === "activate") {
       const panelH = 380;
-      const panelY = Math.max(8, (H - panelH) / 2);
+      const panelY = (H - panelH) / 2;
+      const _fit = this._fitBegin(panelH);   // scale to fit landscape
       this._premiumPanel(panelX, panelY, panelW, panelH);
 
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -928,8 +1230,8 @@ class Renderer {
       // Instructions
       ctx.fillStyle = PALETTE.textMuted;
       ctx.font      = "14px system-ui, -apple-system, sans-serif";
-      ctx.fillText("Enter the email address used for", panelX + panelW / 2, panelY + 68);
-      ctx.fillText("your Stripe payment, then press Verify.", panelX + panelW / 2, panelY + 88);
+      ctx.fillText("Enter the email used for your", panelX + panelW / 2, panelY + 68);
+      ctx.fillText("purchase, then press Verify.", panelX + panelW / 2, panelY + 88);
 
       // Email input
       const inputX = panelX + pad, inputW = panelW - pad * 2;
@@ -974,10 +1276,21 @@ class Renderer {
       this.layout.premiumCheckBtn = (!ps.checking && hasEmail)
         ? { x: inputX, y: verifyY, w: inputW, h: 46 } : null;
 
-      // Back button
+      // Bottom row: Back — plus "Restore Purchase" on native (Apple/Google IAP restore).
       const backY = panelY + panelH - pad - 36;
-      this._premiumBtn(inputX, backY, inputW, 36, "rgba(255,255,255,0.12)", PALETTE.textPrimary, "Back", false);
-      this.layout.premiumBackBtn = { x: inputX, y: backY, w: inputW, h: 36 };
+      if (window.Capacitor) {
+        const halfW = (inputW - 8) / 2;
+        this._premiumBtn(inputX, backY, halfW, 36, "rgba(255,255,255,0.12)", PALETTE.textPrimary, "Back", false);
+        this.layout.premiumBackBtn = { x: inputX, y: backY, w: halfW, h: 36 };
+        const rx = inputX + halfW + 8;
+        this._premiumBtn(rx, backY, halfW, 36, "rgba(255,255,255,0.12)", PALETTE.textPrimary, "Restore Purchase", false);
+        this.layout.premiumRestoreBtn = { x: rx, y: backY, w: halfW, h: 36 };
+      } else {
+        this._premiumBtn(inputX, backY, inputW, 36, "rgba(255,255,255,0.12)", PALETTE.textPrimary, "Back", false);
+        this.layout.premiumBackBtn = { x: inputX, y: backY, w: inputW, h: 36 };
+        this.layout.premiumRestoreBtn = null;
+      }
+      this._fitEnd(_fit);
       return;
     }
 
@@ -990,51 +1303,64 @@ class Renderer {
       "Global Daily Challenge leaderboard",
       "Many themes and card faces",
     ];
-    const featLineH = 24;
-    const featH     = features.length * featLineH;
-    // panelH = top pad + title + features + price line + buy btn + activate btn + close + bottom pad
-    const panelH = pad + 42 + featH + 28 + 46 + 10 + 40 + 10 + 36 + pad;
-    const panelY = Math.max(8, (H - panelH) / 2);
+    // Vertical metrics — scaled down uniformly if the natural panel is taller than
+    // the screen (landscape), so Buy / Activate / Close are always visible.
+    let topPad = 40, featLineH = 24, priceGap = 28, buyH = 46, g1 = 10, actH = 40, g2 = 10, closeH = 36;
+    const natH = () => pad + topPad + features.length * featLineH + priceGap + buyH + g1 + actH + g2 + closeH + pad;
+    let panelH = natH();
+    const avail = H - 12;
+    let fS = 1;
+    if (panelH > avail) {
+      fS = avail / panelH;
+      topPad *= fS; featLineH *= fS; priceGap *= fS; buyH *= fS; g1 *= fS; actH *= fS; g2 *= fS; closeH *= fS;
+      panelH = natH();
+    }
+    const featH  = features.length * featLineH;
+    const panelY = Math.max(6, (H - panelH) / 2);
     this._premiumPanel(panelX, panelY, panelW, panelH);
 
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#fbbf24";
-    ctx.font      = "bold 24px system-ui, -apple-system, sans-serif";
-    ctx.fillText("⭐  Go Premium", panelX + panelW / 2, panelY + pad + 10);
+    ctx.font      = `bold ${Math.round(24 * fS)}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText("⭐  Go Premium", panelX + panelW / 2, panelY + pad + 10 * fS);
 
     ctx.fillStyle = PALETTE.textMuted;
-    ctx.font      = "14px system-ui, -apple-system, sans-serif";
+    ctx.font      = `${Math.round(14 * fS)}px system-ui, -apple-system, sans-serif`;
     features.forEach((f, i) =>
-      ctx.fillText(`✓  ${f}`, panelX + panelW / 2, panelY + pad + 40 + i * featLineH));
+      ctx.fillText(`✓  ${f}`, panelX + panelW / 2, panelY + pad + topPad + i * featLineH));
 
+    // Price line — LIVE localized store price when available (RevenueCat), else fallback.
+    const priceStr = this._priceStr || null;
     ctx.fillStyle = "#fbbf24";
-    ctx.font      = "bold 16px system-ui, -apple-system, sans-serif";
-    ctx.fillText("€4.99 launch price  ·  €9.99 regular",
-                 panelX + panelW / 2, panelY + pad + 40 + featH + 14);
+    ctx.font      = `bold ${Math.round(16 * fS)}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(priceStr ? `${priceStr}  ·  one-time purchase` : "One-time purchase — unlock forever",
+                 panelX + panelW / 2, panelY + pad + topPad + featH + priceGap / 2);
 
     const bx  = panelX + pad, bw = panelW - pad * 2;
-    let   curY = panelY + pad + 40 + featH + 34;
+    let   curY = panelY + pad + topPad + featH + priceGap;
 
     // Buy button
-    this._premiumBtn(bx, curY, bw, 46, "#fbbf24", "#1a1a0a", "Buy Premium — €4.99", true);
-    this.layout.premiumBuyBtn = { x: bx, y: curY, w: bw, h: 46 };
-    curY += 46 + 10;
+    const buyLabel = priceStr ? `Buy Premium — ${priceStr}` : "Buy Premium";
+    this._premiumBtn(bx, curY, bw, buyH, "#fbbf24", "#1a1a0a", buyLabel, true);
+    this.layout.premiumBuyBtn = { x: bx, y: curY, w: bw, h: buyH };
+    curY += buyH + g1;
 
     // Already Purchased button
     ctx.fillStyle  = "rgba(255,255,255,0.13)";
-    this._rrect(bx, curY, bw, 40, 10); ctx.fill();
+    this._rrect(bx, curY, bw, actH, 10); ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.22)"; ctx.lineWidth = 1;
-    this._rrect(bx, curY, bw, 40, 10); ctx.stroke();
+    this._rrect(bx, curY, bw, actH, 10); ctx.stroke();
     ctx.fillStyle = PALETTE.textPrimary;
-    ctx.font      = "14px system-ui, -apple-system, sans-serif";
+    ctx.font      = `${Math.round(14 * fS)}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("Already Purchased?  Activate License", bx + bw / 2, curY + 20);
-    this.layout.premiumActivateBtn = { x: bx, y: curY, w: bw, h: 40 };
-    curY += 40 + 10;
+    // Opens the email-license activation step (Stripe/web purchase) on all platforms.
+    ctx.fillText("Already Purchased?  Activate License", bx + bw / 2, curY + actH / 2);
+    this.layout.premiumActivateBtn = { x: bx, y: curY, w: bw, h: actH };
+    curY += actH + g2;
 
     // Close button
-    this._premiumBtn(bx, curY, bw, 36, "rgba(255,255,255,0.10)", PALETTE.textMuted, "Close", false);
-    this.layout.premiumCloseBtn = { x: bx, y: curY, w: bw, h: 36 };
+    this._premiumBtn(bx, curY, bw, closeH, "rgba(255,255,255,0.10)", PALETTE.textMuted, "Close", false);
+    this.layout.premiumCloseBtn = { x: bx, y: curY, w: bw, h: closeH };
   }
 
   /** Shared panel frame helper. */
@@ -1064,6 +1390,7 @@ class Renderer {
     return hit(this.layout.premiumCloseBtn,    "close")
         || hit(this.layout.premiumBuyBtn,      "buy")
         || hit(this.layout.premiumActivateBtn, "activate")
+        || hit(this.layout.premiumRestoreBtn,  "restore")
         || hit(this.layout.premiumBackBtn,     "back")
         || hit(this.layout.premiumEmailInput,  "emailinput")
         || hit(this.layout.premiumCheckBtn,    "verify")
@@ -1099,7 +1426,8 @@ class Renderer {
     const lineH  = 26;
     const panelH = pad * 2 + 48 + lines.length * lineH + 52;
     const panelX = (W - panelW) / 2;
-    const panelY = Math.max(8, (H - panelH) / 2);
+    const panelY = (H - panelH) / 2;
+    const _fit = this._fitBegin(panelH);   // scale to fit landscape
 
     ctx.fillStyle = "#1e6b40";
     this._rrect(panelX, panelY, panelW, panelH, 18);
@@ -1135,6 +1463,7 @@ class Renderer {
     ctx.fillText("Close", cbx + cbw / 2, cby + 20);
 
     this.layout.htpCloseBtn = { x: cbx, y: cby, w: cbw, h: 40 };
+    this._fitEnd(_fit);
   }
 
   hitTestHtpClose(px, py) {
@@ -1156,16 +1485,18 @@ class Renderer {
     ctx.fillStyle = PALETTE.overlayBg;
     ctx.fillRect(0, 0, W, H);
 
-    const panelW = Math.min(360, W - 40);
+    const panelW = Math.min(400, W - 32);
     const pad    = 16;
     const rowH   = 36;
     const tabH   = 38;
     const rows   = scores[activeTab] || [];
     const visRows = Math.min(rows.length || 5, 15);
     const emptyH  = rows.length === 0 ? 52 : 0;
-    const panelH  = pad * 2 + 44 + tabH + 8 + Math.max(visRows, 1) * rowH + emptyH + 52;
+    const metaH   = (activeTab === "lifetime" && scores.meta) ? 20 : 0;
+    const panelH  = pad * 2 + 44 + tabH + 8 + metaH + Math.max(visRows, 1) * rowH + emptyH + 52;
     const panelX  = (W - panelW) / 2;
-    const panelY  = Math.max(6, (H - panelH) / 2);
+    const panelY  = (H - panelH) / 2;
+    const _fit = this._fitBegin(panelH);   // scale to fit landscape; mapOverlayTap maps taps
 
     ctx.fillStyle = "#1e6b40";
     this._rrect(panelX, panelY, panelW, panelH, 18);
@@ -1184,10 +1515,11 @@ class Renderer {
 
     // Tabs
     const tabY  = panelY + pad + 36;
-    const tabW  = (panelW - pad * 2) / 2 - 3;
+    const tabW  = (panelW - pad * 2 - 12) / 3;
     const tabs  = [
-      { id: "regular", label: "Regular",         x: panelX + pad },
-      { id: "daily",   label: "Daily Challenge",  x: panelX + pad + tabW + 6 },
+      { id: "regular",  label: "Regular",  x: panelX + pad },
+      { id: "daily",    label: "Daily",    x: panelX + pad + (tabW + 6) },
+      { id: "lifetime", label: "Lifetime", x: panelX + pad + 2 * (tabW + 6) },
     ];
     const tabBtns = [];
     tabs.forEach(tab => {
@@ -1210,18 +1542,38 @@ class Renderer {
     });
     this.layout.hsTabs = tabBtns;
 
+    // Optional lifetime summary line (cumulative points across all games)
+    let listY = tabY + tabH + 8;
+    if (activeTab === "lifetime" && scores.meta) {
+      const m = scores.meta;
+      ctx.fillStyle    = PALETTE.textMuted;
+      ctx.font         = "12px system-ui, -apple-system, sans-serif";
+      ctx.textAlign    = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`Total ${Number(m.total || 0).toLocaleString()} pts · ${m.games || 0} games · best ${m.best || 0}`,
+                   panelX + panelW / 2, listY + 6);
+      listY += 20;
+    }
+
+    // Column anchors: # | Score (left) · Duration · Date (center) · Player (right)
+    const numX   = panelX + pad + 2;
+    const scoreX = panelX + pad + 22;
+    const durX   = panelX + panelW * 0.45;
+    const dateX  = panelX + panelW * 0.67;
+    const playX  = panelX + panelW - pad;
+
     // Column headers
-    const listY = tabY + tabH + 8;
     ctx.fillStyle = PALETTE.textMuted;
     ctx.font      = "11px system-ui, -apple-system, sans-serif";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText("#", panelX + pad + 2, listY + 10);
-    ctx.fillText("Score", panelX + pad + 28, listY + 10);
+    ctx.fillText("#", numX, listY + 10);
+    ctx.fillText("Score", scoreX, listY + 10);
     ctx.textAlign = "center";
-    ctx.fillText("Time", panelX + panelW / 2 + 10, listY + 10);
+    ctx.fillText("Duration", durX, listY + 10);
+    ctx.fillText("Date", dateX, listY + 10);
     ctx.textAlign = "right";
-    ctx.fillText("Player", panelX + panelW - pad, listY + 10);
+    ctx.fillText("Player", playX, listY + 10);
 
     if (rows.length === 0) {
       ctx.fillStyle    = PALETTE.textDisabled;
@@ -1244,14 +1596,20 @@ class Renderer {
         ctx.fillStyle = i === 0 ? "#fbbf24" : PALETTE.textPrimary;
         ctx.font      = `${i < 3 ? "bold " : ""}14px system-ui, -apple-system, sans-serif`;
         ctx.textAlign = "left";
-        ctx.fillText(`${i + 1}`, panelX + pad + 2, midRy);
-        ctx.fillText(String(entry.score), panelX + pad + 28, midRy);
+        ctx.fillText(`${i + 1}`, numX, midRy);
+        ctx.fillText(String(entry.score), scoreX, midRy);
+        // Duration (game length) — also the tiebreaker for equal scores.
         ctx.textAlign = "center";
-        ctx.fillText(_fmtTime(entry.seconds), panelX + panelW / 2 + 10, midRy);
-        ctx.textAlign = "right";
-        ctx.fillStyle = PALETTE.textMuted;
         ctx.font      = "13px system-ui, -apple-system, sans-serif";
-        ctx.fillText(entry.name || "—", panelX + panelW - pad, midRy);
+        ctx.fillText(entry.seconds != null ? _fmtTime(entry.seconds) : "—", durX, midRy);
+        // Date the score was set.
+        ctx.fillStyle = PALETTE.textMuted;
+        ctx.font      = "12px system-ui, -apple-system, sans-serif";
+        ctx.fillText(entry.date || "—", dateX, midRy);
+        // Player name (right-aligned).
+        ctx.textAlign = "right";
+        ctx.font      = "13px system-ui, -apple-system, sans-serif";
+        ctx.fillText(entry.name || "—", playX, midRy);
       });
     }
 
@@ -1268,6 +1626,7 @@ class Renderer {
     ctx.textBaseline = "middle";
     ctx.fillText("Close", cbx + cbw / 2, cby + 20);
     this.layout.hsCloseBtn = { x: cbx, y: cby, w: cbw, h: 40 };
+    this._fitEnd(_fit);
   }
 
   hitTestHighScores(px, py) {
@@ -1284,101 +1643,146 @@ class Renderer {
 
   // ── Themes overlay ───────────────────────────────────────────────────────
 
-  _drawThemes(currentTheme) {
+  _drawThemes(uiState) {
     const { ctx } = this;
     const { W, H } = this.layout;
+    const isPremium  = !!uiState.isPremium;
+    const curSkin    = uiState.settings.theme    || "green";
+    const curPack    = uiState.settings.cardPack || "classic";
+
+    const skins = (typeof skinList === "function") ? skinList() : [];
+    const packs = (typeof cardPackList === "function") ? cardPackList() : [];
 
     ctx.fillStyle = PALETTE.overlayBg;
     ctx.fillRect(0, 0, W, H);
 
-    const themes = [
-      { id: "green",    label: "Classic Green", felt: "#1b5e3b" },
-      { id: "blue",     label: "Ocean",         felt: "#1a3f6e" },
-      { id: "midnight", label: "Midnight Blue", felt: "#0d1b3e" },
-      { id: "darkfelt", label: "Dark Felt",     felt: "#2a2a2a" },
-      { id: "purple",   label: "Royal Purple",  felt: "#3b1a5e" },
-    ];
+    const panelW = Math.min(380, W - 28);
+    const pad    = 18;
+    const gap    = 8;
+    const cols   = 2;
+    const skinH  = 52;
+    const packH  = 46;
+    const skinRows = Math.ceil(skins.length / cols);
+    const packRows = Math.ceil(packs.length / cols);
+    const cellW = (panelW - pad * 2 - gap) / cols;
 
-    const panelW    = Math.min(360, W - 40);
-    const pad       = 20;
-    const swatchH   = 72;
-    const swatchGap = 10;
-    const cols      = 2;
-    const rows      = Math.ceil(themes.length / cols);
-    const swatchW = (panelW - pad * 2 - swatchGap) / cols;
-    const panelH  = pad * 2 + 48 + rows * (swatchH + swatchGap) - swatchGap + 52;
-    const panelX  = (W - panelW) / 2;
-    const panelY  = Math.max(6, (H - panelH) / 2);
+    const titleH = 30, secH = 22, closeH = 42;
+    const panelH = pad + titleH
+                 + secH + skinRows * (skinH + gap)
+                 + 10 + secH + packRows * (packH + gap)
+                 + 8  + closeH + pad;
+    const panelX = (W - panelW) / 2;
+    const panelY = (H - panelH) / 2;
+    const _fit = this._fitBegin(panelH);   // scale to fit landscape
 
-    ctx.fillStyle = "#1e6b40";
-    this._rrect(panelX, panelY, panelW, panelH, 18);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.18)";
-    ctx.lineWidth   = 1;
-    this._rrect(panelX, panelY, panelW, panelH, 18);
-    ctx.stroke();
+    ctx.fillStyle = PALETTE.panelBg;
+    this._rrect(panelX, panelY, panelW, panelH, 18); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.18)"; ctx.lineWidth = 1;
+    this._rrect(panelX, panelY, panelW, panelH, 18); ctx.stroke();
 
-    ctx.fillStyle    = PALETTE.textPrimary;
-    ctx.font         = "bold 22px system-ui, -apple-system, sans-serif";
-    ctx.textAlign    = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("Themes", panelX + panelW / 2, panelY + pad + 14);
+    ctx.fillStyle = PALETTE.textPrimary;
+    ctx.font = "bold 22px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("Themes", panelX + panelW / 2, panelY + pad + 12);
 
-    const themeBtns = [];
-    themes.forEach((theme, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const sx  = panelX + pad + col * (swatchW + swatchGap);
-      const sy  = panelY + pad + 42 + row * (swatchH + swatchGap);
-      const sel = theme.id === currentTheme;
+    let y = panelY + pad + titleH;
 
-      ctx.fillStyle = theme.felt;
-      this._rrect(sx, sy, swatchW, swatchH - 20, 10);
-      ctx.fill();
+    // ── Skins section ──
+    ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "left"; ctx.fillStyle = PALETTE.textMuted;
+    ctx.fillText("BOARD SKINS", panelX + pad, y + secH / 2);
+    y += secH;
 
-      if (sel) {
-        ctx.strokeStyle = "#fbbf24";
-        ctx.lineWidth   = 2.5;
-        this._rrect(sx, sy, swatchW, swatchH - 20, 10);
-        ctx.stroke();
-        // Checkmark
-        ctx.fillStyle = "#fbbf24";
-        ctx.font      = "16px system-ui";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "top";
-        ctx.fillText("✓", sx + swatchW - 6, sy + 4);
-      }
-
-      ctx.fillStyle    = PALETTE.textPrimary;
-      ctx.font         = `${sel ? "bold " : ""}14px system-ui, -apple-system, sans-serif`;
-      ctx.textAlign    = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(theme.label, sx + swatchW / 2, sy + swatchH - 10);
-
-      themeBtns.push({ id: theme.id, x: sx, y: sy, w: swatchW, h: swatchH });
+    const skinBtns = [];
+    skins.forEach((s, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const sx = panelX + pad + col * (cellW + gap);
+      const sy = y + row * (skinH + gap);
+      const locked = s.premium && !isPremium;
+      const sel = s.id === curSkin;
+      // swatch fill = the skin's felt colour
+      const felt = (s.palette && s.palette.felt) || "#1b5e3b";
+      ctx.fillStyle = felt;
+      this._rrect(sx, sy, cellW, skinH, 10); ctx.fill();
+      this._themeSwatchChrome(sx, sy, cellW, skinH, s.label, sel, locked, s.premium);
+      skinBtns.push({ id: s.id, x: sx, y: sy, w: cellW, h: skinH, locked });
     });
-    this.layout.themeBtns = themeBtns;
+    this.layout.skinBtns = skinBtns;
+    y += skinRows * (skinH + gap) + 10;
 
-    const cbx = panelX + pad;
-    const cby = panelY + panelH - pad - 40;
-    const cbw = panelW - pad * 2;
+    // ── Card faces section ──
+    ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "left"; ctx.fillStyle = PALETTE.textMuted;
+    ctx.fillText("CARD FACES", panelX + pad, y + secH / 2);
+    y += secH;
+
+    const packBtns = [];
+    packs.forEach((p, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const sx = panelX + pad + col * (cellW + gap);
+      const sy = y + row * (packH + gap);
+      const soon   = !p.available;
+      const locked = (p.premium && !isPremium) || soon;
+      const sel = p.id === curPack;
+      ctx.fillStyle = PALETTE.cardFace;
+      this._rrect(sx, sy, cellW, packH, 10); ctx.fill();
+      const badge = soon ? "Soon" : (p.premium ? "PRO" : "");
+      this._themeSwatchChrome(sx, sy, cellW, packH, p.label, sel, locked, p.premium, badge, "#1a1a2e");
+      packBtns.push({ id: p.id, x: sx, y: sy, w: cellW, h: packH, locked, available: p.available });
+    });
+    this.layout.packBtns = packBtns;
+    y += packRows * (packH + gap) + 8;
+
+    // ── Close ──
+    const cbx = panelX + pad, cby = y, cbw = panelW - pad * 2;
     ctx.fillStyle = "rgba(255,255,255,0.20)";
-    this._rrect(cbx, cby, cbw, 40, 10);
-    ctx.fill();
-    ctx.fillStyle    = PALETTE.textPrimary;
-    ctx.font         = "16px system-ui, -apple-system, sans-serif";
-    ctx.textAlign    = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("Close", cbx + cbw / 2, cby + 20);
-    this.layout.themeCloseBtn = { x: cbx, y: cby, w: cbw, h: 40 };
+    this._rrect(cbx, cby, cbw, closeH, 10); ctx.fill();
+    ctx.fillStyle = PALETTE.textPrimary;
+    ctx.font = "16px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("Close", cbx + cbw / 2, cby + closeH / 2);
+    this.layout.themeCloseBtn = { x: cbx, y: cby, w: cbw, h: closeH };
+    this._fitEnd(_fit);
   }
 
+  /** Shared swatch decoration: label, selection ring, PRO/lock badge, dim if locked. */
+  _themeSwatchChrome(sx, sy, w, h, label, selected, locked, premium, badge, labelColor) {
+    const { ctx } = this;
+    if (locked) { ctx.fillStyle = "rgba(0,0,0,0.45)"; this._rrect(sx, sy, w, h, 10); ctx.fill(); }
+    if (selected && !locked) {
+      ctx.strokeStyle = PALETTE.borderSelected; ctx.lineWidth = 2.5;
+      this._rrect(sx, sy, w, h, 10); ctx.stroke();
+      ctx.fillStyle = PALETTE.borderSelected; ctx.font = "15px system-ui";
+      ctx.textAlign = "right"; ctx.textBaseline = "top";
+      ctx.fillText("✓", sx + w - 6, sy + 4);
+    }
+    // PRO / Soon badge top-left
+    const tag = badge !== undefined ? badge : (premium ? "PRO" : "");
+    if (tag) {
+      ctx.fillStyle = "#fbbf24"; ctx.font = "bold 10px system-ui";
+      ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.fillText(locked ? `🔒 ${tag}` : tag, sx + 6, sy + 5);
+    }
+    ctx.fillStyle = locked ? "rgba(255,255,255,0.7)" : (labelColor || PALETTE.textPrimary);
+    ctx.font = `${selected ? "bold " : ""}13px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText(label, sx + w / 2, sy + h - 6);
+  }
+
+  /**
+   * @returns {object|null} one of:
+   *   { type:"close" }
+   *   { type:"skin", id, locked }
+   *   { type:"pack", id, locked, available }
+   */
   hitTestThemes(px, py) {
-    const close = this.layout.themeCloseBtn;
-    if (close && px >= close.x && px <= close.x + close.w &&
-        py >= close.y && py <= close.y + close.h) return "close";
-    for (const t of (this.layout.themeBtns || [])) {
-      if (px >= t.x && px <= t.x + t.w && py >= t.y && py <= t.y + t.h) return t.id;
+    const inside = (b) => b && px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h;
+    if (inside(this.layout.themeCloseBtn)) return { type: "close" };
+    for (const b of (this.layout.skinBtns || [])) {
+      if (inside(b)) return { type: "skin", id: b.id, locked: b.locked };
+    }
+    for (const b of (this.layout.packBtns || [])) {
+      if (inside(b)) return { type: "pack", id: b.id, locked: b.locked, available: b.available };
     }
     return null;
   }
@@ -1408,7 +1812,8 @@ class Renderer {
     ];
     const panelH = pad * 2 + 48 + lines.length * lineH + 52;
     const panelX = (W - panelW) / 2;
-    const panelY = Math.max(6, (H - panelH) / 2);
+    const panelY = (H - panelH) / 2;
+    const _fit = this._fitBegin(panelH);   // scale to fit landscape
 
     ctx.fillStyle = "#1e6b40";
     this._rrect(panelX, panelY, panelW, panelH, 18);
@@ -1445,6 +1850,7 @@ class Renderer {
     ctx.textBaseline = "middle";
     ctx.fillText("Close", cbx + cbw / 2, cby + 20);
     this.layout.privacyCloseBtn = { x: cbx, y: cby, w: cbw, h: 40 };
+    this._fitEnd(_fit);
   }
 
   hitTestPrivacyClose(px, py) {
@@ -1480,7 +1886,8 @@ class Renderer {
     const btnH   = 48;
     const panelH = pad * 2 + 54 + lines.length * lineH + 16 + btnH + 10 + btnH + pad;
     const panelX = (W - panelW) / 2;
-    const panelY = Math.max(8, (H - panelH) / 2);
+    const panelY = (H - panelH) / 2;
+    const _fit = this._fitBegin(panelH);   // scale to fit landscape so both buttons show
 
     ctx.fillStyle = "#1e6b40";
     this._rrect(panelX, panelY, panelW, panelH, 18);
@@ -1533,6 +1940,7 @@ class Renderer {
 
     this.layout.gdprAcceptBtn  = { x: bx, y: by1, w: bw, h: btnH };
     this.layout.gdprDeclineBtn = { x: bx, y: by2, w: bw, h: btnH };
+    this._fitEnd(_fit);
   }
 
   hitTestGDPR(px, py) {

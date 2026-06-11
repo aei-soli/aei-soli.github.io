@@ -107,9 +107,12 @@
   <script src="soli/core/stats.js"></script>
   <script src="soli/core/firebase.js"></script>
   <script src="soli/core/sound.js"></script>
+  <script src="soli/core/purchases.js"></script>
 
-  <!-- UI layer -->
+  <!-- UI layer — skins.js MUST load before renderer.js (it defines the PALETTE) -->
+  <script src="soli/ui/carbonads.js"></script>
   <script src="soli/ui/ads.js"></script>
+  <script src="soli/ui/skins.js"></script>
   <script src="soli/ui/renderer.js"></script>
   <script src="soli/ui/input.js"></script>
   <script src="soli/ui/game.js"></script>

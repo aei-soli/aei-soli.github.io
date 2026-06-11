@@ -4,7 +4,7 @@
  * Cache is versioned — bump CACHE_NAME on deploy to force refresh.
  */
 
-const CACHE_NAME = "soli-v6";
+const CACHE_NAME = "soli-v40";
 
 const PRECACHE = [
   "./",
@@ -20,8 +20,11 @@ const PRECACHE = [
   "./core/stats.js",
   "./core/firebase.js",
   "./core/sound.js",
+  "./core/purchases.js",
   // UI layer
+  "./ui/carbonads.js",
   "./ui/ads.js",
+  "./ui/skins.js",
   "./ui/renderer.js",
   "./ui/input.js",
   "./ui/game.js",

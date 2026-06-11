@@ -11,16 +11,21 @@
   <meta name="theme-color" content="#1b5e3b">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Body is padded by the iOS safe-area insets; the canvas fills the remaining
+       content box at 100% × 100%. game.js reads canvas.clientWidth/clientHeight (the
+       real drawable area, insets already excluded) — reliable in WKWebView, unlike a
+       position:fixed canvas which sizes inconsistently. */
     html, body {
       width: 100%; height: 100%;
       overflow: hidden;
       background: #1b5e3b;
-      /* Support iOS safe areas */
-      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      padding: env(safe-area-inset-top)  env(safe-area-inset-right)
                env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
-    canvas {
+    canvas#game {
       display: block;
+      width: 100%;
+      height: 100%;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
       -webkit-user-select: none;
@@ -44,9 +49,47 @@
       width: 728px;
       height: 90px;
     }
+    /* CarbonAds — neutralise their default fixed/absolute positioning so the ad
+       sits centred inside our bottom strip instead of floating top-right. */
+    #ad-strip #carbonads {
+      position: static !important;
+      display: inline-block;
+      max-width: 360px;
+      margin: 0 auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #ad-strip #carbonads * { box-sizing: content-box; }
+    #ad-strip .carbon-img { float: left; margin-right: 10px; }
+    #ad-strip .carbon-text,
+    #ad-strip .carbon-poweredby {
+      display: block; color: #ddd; text-decoration: none; font-size: 12px;
+    }
+    #ad-strip .carbon-poweredby { color: #999; font-size: 9px; text-transform: uppercase; }
   </style>
 </head>
 <body>
+  <!-- On-screen error catcher (temporary diagnostic). Shows uncaught JS errors so a
+       blank board reveals its cause instead of failing silently. Safe to remove later. -->
+  <div id="err" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(140,0,0,0.92);
+       color:#fff;font:12px/1.4 -apple-system,system-ui,monospace;padding:8px;white-space:pre-wrap;
+       display:none;max-height:50%;overflow:auto;"></div>
+  <script>
+    (function () {
+      function show(msg) {
+        var d = document.getElementById("err");
+        if (!d) return;
+        d.style.display = "block";
+        d.textContent = (d.textContent ? d.textContent + "\n" : "") + msg;
+      }
+      window.addEventListener("error", function (e) {
+        show("ERROR: " + (e.message || e.error) + (e.filename ? "  @ " + e.filename.split("/").pop() + ":" + e.lineno : ""));
+      });
+      window.addEventListener("unhandledrejection", function (e) {
+        show("PROMISE: " + (e.reason && (e.reason.message || e.reason)));
+      });
+    })();
+  </script>
+
   <canvas id="game"></canvas>
 
   <!--
@@ -66,7 +109,20 @@
     Replace data-ad-client and data-ad-slot with your real AdSense values before deploy.
     The GameUI shows/hides this div based on _isPremium.
   -->
+  <!--
+    Web ad strip. Free desktop/web users only — hidden for premium and on Capacitor
+    (iOS/Android use the native AdMob banner instead).
+
+    PRIMARY: CarbonAds. ui/carbonads.js injects the Carbon script into #carbon-host
+    once you've been approved and filled in your serve/placement IDs in that file.
+    Until then carbonads.configured === false, so the strip stays hidden (no empty bar).
+
+    FALLBACK (optional): Google AdSense. If you'd rather run AdSense on web, uncomment
+    the block below and replace the slot ID. Don't run both at once.
+  -->
   <div id="ad-strip">
+    <div id="carbon-host"></div>
+    <!--
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4986726877058608"
             crossorigin="anonymous"></script>
     <ins class="adsbygoogle"
@@ -74,6 +130,7 @@
          data-ad-client="ca-pub-4986726877058608"
          data-ad-slot="8018588834"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    -->
   </div>
 
   <!--
@@ -93,15 +150,21 @@
   <script src="core/stats.js"></script>
   <script src="core/firebase.js"></script>
   <script src="core/sound.js"></script>
+  <script src="core/purchases.js"></script>
 
   <!-- UI layer -->
+  <script src="ui/carbonads.js"></script>
   <script src="ui/ads.js"></script>
+  <script src="ui/skins.js"></script>
   <script src="ui/renderer.js"></script>
   <script src="ui/input.js"></script>
   <script src="ui/game.js"></script>
   <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js");
+    // Service worker powers offline caching for the WEB / PWA build only. In the
+    // native Capacitor app (iOS/Android) assets are bundled locally and SW
+    // registration against localhost fails — skip it there (and swallow any error).
+    if (!window.Capacitor && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
     }
   </script>
 </body>

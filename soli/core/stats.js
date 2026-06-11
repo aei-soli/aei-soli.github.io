@@ -29,6 +29,7 @@ class StatsManager {
   recordGame({ won, score, seconds }) {
     const d = this._data;
     d.played++;
+    d.totalScore += (score || 0);            // lifetime cumulative points (all games)
     if (won) {
       d.won++;
       if (score > d.bestScore) d.bestScore = score;
@@ -59,13 +60,22 @@ class StatsManager {
    * @param {{ score: number, seconds: number, name?: string }} entry
    */
   recordScore(type, { score, seconds, name = "" }) {
-    if (!this._scores[type]) this._scores[type] = [];
-    const date  = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    if (!this._scores[type])     this._scores[type]     = [];
+    if (!this._scores.lifetime)  this._scores.lifetime  = [];
+    const date  = new Date().toLocaleDateString(undefined, { year: "2-digit", month: "short", day: "numeric" });
     const entry = { score, seconds, date, name };
+    const sortTrim = (list) => {
+      list.sort((a, b) => b.score - a.score || a.seconds - b.seconds);
+      return list.slice(0, MAX_SCORES);
+    };
     this._scores[type].push(entry);
-    // Sort descending by score, then ascending by time as tiebreaker
-    this._scores[type].sort((a, b) => b.score - a.score || a.seconds - b.seconds);
-    this._scores[type] = this._scores[type].slice(0, MAX_SCORES);
+    this._scores[type] = sortTrim(this._scores[type]);
+    // Lifetime = all-time best across every mode. Push the SAME entry object so a
+    // later name patch (updateLastScoreName) propagates to both lists.
+    if (type !== "lifetime") {
+      this._scores.lifetime.push(entry);
+      this._scores.lifetime = sortTrim(this._scores.lifetime);
+    }
     // Keep a reference so updateLastScoreName can patch the name after the user types it
     this._lastRecordedType  = type;
     this._lastRecordedEntry = entry;
@@ -85,18 +95,18 @@ class StatsManager {
   }
 
   resetScores() {
-    this._scores = { regular: [], daily: [] };
+    this._scores = this._defaultScores();
     this._saveScores();
   }
 
   // ── Internal ──────────────────────────────────────────────────────────────
 
   _defaultStats() {
-    return { played: 0, won: 0, bestScore: 0, bestTime: 0, totalSeconds: 0 };
+    return { played: 0, won: 0, bestScore: 0, bestTime: 0, totalSeconds: 0, totalScore: 0 };
   }
 
   _defaultScores() {
-    return { regular: [], daily: [] };
+    return { regular: [], daily: [], lifetime: [] };
   }
 
   _loadStats() {
@@ -110,7 +120,17 @@ class StatsManager {
   _loadScores() {
     try {
       const raw = localStorage.getItem(SCORES_KEY);
-      if (raw) return { ...this._defaultScores(), ...JSON.parse(raw) };
+      if (raw) {
+        const s = { ...this._defaultScores(), ...JSON.parse(raw) };
+        // One-time backfill: build Lifetime from existing regular+daily for users
+        // who played before the Lifetime board existed.
+        if (!Array.isArray(s.lifetime) || s.lifetime.length === 0) {
+          s.lifetime = [...(s.regular || []), ...(s.daily || [])]
+            .sort((a, b) => b.score - a.score || a.seconds - b.seconds)
+            .slice(0, MAX_SCORES);
+        }
+        return s;
+      }
     } catch (_) {}
     return this._defaultScores();
   }

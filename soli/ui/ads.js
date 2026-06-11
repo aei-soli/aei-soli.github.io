@@ -16,10 +16,27 @@
 
 "use strict";
 
+// ── AdMob test/production switch ───────────────────────────────────────────────
+// SINGLE SOURCE OF TRUTH. Flip this ONE constant before archiving for the App Store.
+//   true  → Google serves TEST creatives against your real Ad Unit IDs (dev/TestFlight)
+//   false → real ads, real revenue (App Store release ONLY)
+// Apple/Google can ban your account if you click your own LIVE ads, so keep this
+// true on every device you personally test on. See ADMOB_SETUP_GUIDE.md.
+const AD_TESTING = true;
+
+// DEV TOGGLE: set to false to suppress all interstitial ads (handy while testing on
+// the simulator, where every ad request fails and the upsell overlay keeps appearing).
+// Set back to true before release. Does not affect the banner or premium logic.
+const INTERSTITIALS_ENABLED = true;
+
+// MASTER ADS KILL-SWITCH: set to false to fully disable AdMob (no banner, no interstitial,
+// no init). The iOS Simulator can't reach Google's ad servers, so leaving ads on there
+// produces an endless failed-request loop that can crash the WebView. Keep this FALSE
+// while testing on the simulator; set it back to TRUE before building for a real device
+// / release so banners + interstitials work again.
+const ADS_ENABLED = true;
+
 // ── AdMob unit IDs ────────────────────────────────────────────────────────────
-// isTesting: true is set throughout — shows Google test creatives against your
-// real Ad Unit IDs. Safe for Mac Simulator and physical iPad during development.
-// When submitting to App Store: set isTesting → false everywhere below.
 const ADMOB_BANNER_ID       = "ca-app-pub-4986726877058608/6166149794"; // your banner
 const ADMOB_INTERSTITIAL_ID = "ca-app-pub-4986726877058608/5900910546"; // your interstitial
 // Fallback test IDs for reference:
@@ -51,7 +68,7 @@ class AdManager {
     this._admobReady        = false;
     this._interstitialReady = false;   // true after prepareInterstitial succeeds
     this._bannerShown       = false;
-    this._bannerH           = 72;      // updated via bannerAdSizeChanged event
+    this._bannerH           = 50;      // updated via bannerAdSizeChanged event
     this._admobModule       = null;    // cached import
 
     // Browser canvas interstitial state
@@ -85,7 +102,7 @@ class AdManager {
    *                                        whenever the banner size is determined
    */
   async initAdMob(showBannerForFreeUser = true, onBannerResize = null) {
-    if (!this._isCapacitor) return;
+    if (!this._isCapacitor || !ADS_ENABLED) return;   // master kill-switch (see top)
 
     try {
       const mod = await this._getAdMob();
@@ -93,7 +110,7 @@ class AdManager {
 
       await mod.AdMob.initialize({
         requestTrackingAuthorization: true,   // iOS ATT prompt
-        initializeForTesting: true,           // set false before App Store submission
+        initializeForTesting: AD_TESTING,     // single switch — see top of file
       });
 
       this._admobReady = true;
@@ -124,11 +141,21 @@ class AdManager {
 
       const { BannerAdSize, BannerAdPosition, BannerAdPluginEvents } = mod;
 
+      // Lift the banner out of the home-indicator safe area so it sits flush with the
+      // footer button row (drawn inside the webview, above the safe area). The body is
+      // padded by env(safe-area-inset-bottom), so read that value and use it as margin.
+      let bottomMargin = 0;
+      try {
+        const sb = parseFloat(getComputedStyle(document.body).paddingBottom);
+        if (!isNaN(sb) && sb > 0) bottomMargin = Math.round(sb);
+      } catch (e) { /* ignore */ }
+
       // Listen for the actual rendered height so the game canvas can resize precisely
       if (BannerAdPluginEvents) {
         mod.AdMob.addListener(BannerAdPluginEvents.SizeChanged, (info) => {
-          // info.height is in dp; add 8px breathing room
-          const h = info && info.height ? Math.ceil(info.height) + 8 : 72;
+          // Reserve exactly the banner's reported height (no extra padding) so the
+          // board sits right above it with no dead gap.
+          const h = info && info.height ? Math.ceil(info.height) : 50;
           this._bannerH = h;
           if (onResize) onResize(h);
         });
@@ -136,10 +163,10 @@ class AdManager {
 
       await mod.AdMob.showBanner({
         adId:      ADMOB_BANNER_ID,
-        adSize:    BannerAdSize.ADAPTIVE_BANNER,   // full-width, no partial overlap
-        position:  BannerAdPosition.BOTTOM_CENTER,
-        margin:    0,
-        isTesting: true,   // set false before App Store submission
+        adSize:    BannerAdSize.BANNER,            // fixed 320×50 — sits in the centre footer slot
+        position:  BannerAdPosition.BOTTOM_CENTER, // between the left/right button groups
+        margin:    bottomMargin,                   // lift above the home-indicator safe area
+        isTesting: AD_TESTING,   // single switch — see top of file
       });
       this._bannerShown = true;
     } catch (err) {
@@ -173,6 +200,7 @@ class AdManager {
   // ── Should-show logic (mirrors macOS) ────────────────────────────────────
 
   shouldShowAfterRound() {
+    if (!INTERSTITIALS_ENABLED) return false;
     if (this._isPremium()) return false;
     const cfg = this._fb.config;
     if (!cfg.enabled) return false;
@@ -181,12 +209,14 @@ class AdManager {
   }
 
   shouldShowBeforeGame() {
+    if (!INTERSTITIALS_ENABLED) return false;
     if (this._isPremium()) return false;
     const cfg = this._fb.config;
     return cfg.enabled && cfg.between_games && this._gamesPlayed > 0;
   }
 
   shouldShowBeforeBonus() {
+    if (!INTERSTITIALS_ENABLED) return false;
     if (this._isPremium()) return false;
     const cfg = this._fb.config;
     return cfg.enabled && cfg.before_bonus;
@@ -209,8 +239,11 @@ class AdManager {
    * configuration and is available via _showAdMobInterstitial() when needed.
    */
   async showInterstitial(onDone, onPremium) {
+    // Respect BOTH switches here so every caller (incl. the game-over / end-of-round
+    // path) is suppressed when interstitials are disabled — not just the shouldShow* gates.
+    if (!ADS_ENABLED || !INTERSTITIALS_ENABLED) { if (onDone) onDone(); return; }
     if (this._isCapacitor) {
-      await this._showAdMobInterstitial(onDone);   // real Google ad
+      await this._showAdMobInterstitial(onDone, onPremium);   // real Google ad
     } else {
       this._showBrowserInterstitial(onDone, onPremium);  // SOLI canvas overlay
     }
@@ -218,7 +251,7 @@ class AdManager {
 
   // ── Capacitor / AdMob interstitial ────────────────────────────────────────
 
-  async _showAdMobInterstitial(onDone) {
+  async _showAdMobInterstitial(onDone, onPremium) {
     const mod = await this._getAdMob();
     if (!mod) { onDone(); return; }
 
@@ -234,7 +267,7 @@ class AdManager {
       if (!this._interstitialReady) {
         await AdMob.prepareInterstitial({
           adId:      ADMOB_INTERSTITIAL_ID,
-          isTesting: true,   // match initializeForTesting above
+          isTesting: AD_TESTING,   // single switch — see top of file
         });
       }
       this._interstitialReady = false;
@@ -255,8 +288,9 @@ class AdManager {
     } catch (err) {
       console.warn("AdMob interstitial failed — falling back to canvas overlay:", err);
       cleanup();
-      // Fall back to browser canvas overlay so user still sees the upsell
-      this._showBrowserInterstitial(onDone, null);
+      // Fall back to browser canvas overlay so user still sees the upsell.
+      // Pass onPremium through so the "Go Premium" button works in the fallback too.
+      this._showBrowserInterstitial(onDone, onPremium);
     }
   }
 
@@ -268,7 +302,7 @@ class AdManager {
       if (!mod) return;
       await mod.AdMob.prepareInterstitial({
         adId:      ADMOB_INTERSTITIAL_ID,
-        isTesting: true,   // match initializeForTesting above
+        isTesting: AD_TESTING,   // single switch — see top of file
       });
       this._interstitialReady = true;
     } catch (_) {
@@ -277,6 +311,12 @@ class AdManager {
   }
 
   // ── Browser canvas interstitial ───────────────────────────────────────────
+
+  /** game.js registers a callback here that draws/updates the canvas overlay. */
+  setOverlayCallback(cb) { this._onOverlay = cb; }
+
+  /** Push the current overlay state to the UI (works for sync AND async-fallback paths). */
+  _pushOverlay() { if (this._onOverlay) this._onOverlay(this._overlayState); }
 
   _showBrowserInterstitial(onDone, onPremium) {
     const total = this._duration();
@@ -287,36 +327,49 @@ class AdManager {
       onPremium,
       canClose:  false,
     };
+    this._pushOverlay();   // draw it immediately
 
     const tick = () => {
       if (!this._overlayState) return;
       this._overlayState.remaining = Math.max(0, this._overlayState.remaining - 1);
       if (this._overlayState.remaining <= 0) this._overlayState.canClose = true;
-      if (this._overlayState._renderFn) this._overlayState._renderFn();
+      this._pushOverlay();   // redraw with updated countdown
       if (this._overlayState.remaining > 0) {
         this._overlayTimer = setTimeout(tick, 1000);
       }
     };
     this._overlayTimer = setTimeout(tick, 1000);
+
+    // Hard failsafe — never trap the user. Force-dismiss shortly after the countdown
+    // should have finished, even if the tick stalls (e.g. WKWebView timer throttling).
+    this._overlayHardTimer = setTimeout(() => this.dismissInterstitial(true), (total + 3) * 1000);
   }
 
   get overlayState() { return this._overlayState; }
 
-  /** User tapped Continue (countdown expired). */
-  dismissInterstitial() {
-    if (!this._overlayState || !this._overlayState.canClose) return;
-    if (this._overlayTimer) clearTimeout(this._overlayTimer);
+  _clearOverlayTimers() {
+    if (this._overlayTimer)     { clearTimeout(this._overlayTimer);     this._overlayTimer = null; }
+    if (this._overlayHardTimer) { clearTimeout(this._overlayHardTimer); this._overlayHardTimer = null; }
+  }
+
+  /** Continue. force=true bypasses the countdown gate (used for tap + failsafe). */
+  dismissInterstitial(force = false) {
+    if (!this._overlayState) return;
+    if (!force && !this._overlayState.canClose) return;
+    this._clearOverlayTimers();
     const cb = this._overlayState.onDone;
     this._overlayState = null;
-    cb();
+    this._pushOverlay();   // clear it in the UI
+    if (cb) cb();
   }
 
   /** User tapped Go Premium during browser ad. */
   premiumFromInterstitial() {
     if (!this._overlayState) return;
-    if (this._overlayTimer) clearTimeout(this._overlayTimer);
+    this._clearOverlayTimers();
     const cb = this._overlayState.onPremium;
     this._overlayState = null;
+    this._pushOverlay();
     if (cb) cb();
   }
 

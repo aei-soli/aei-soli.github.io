@@ -37,7 +37,7 @@ class GameUI {
       settings:     this._loadSettings(),
       showGDPR:      !localStorage.getItem("soli_gdpr"),
       winInput:      null,
-      highScores:    { regular: [], daily: [] },
+      highScores:    { regular: [], daily: [], lifetime: [] },
       hsTab:         "regular",
       showBonusRound: false,
       adOverlay:     null,
@@ -52,6 +52,11 @@ class GameUI {
     this._gameType  = "regular";   // 'regular' | 'daily'
     this._isPremium = this._loadPremium();
     this._ads       = new AdManager(this._firebase, () => this._isPremium);
+    // Draw/update the canvas interstitial whenever the ad manager pushes overlay state.
+    // Works for both the immediate browser path and the async AdMob-failure fallback.
+    this._ads.setOverlayCallback((ov) => { this.uiState.adOverlay = ov; this._render(); });
+    this._carbon    = (typeof CarbonAds !== "undefined") ? new CarbonAds() : null;  // web-only ad strip
+    this._purchases = (typeof PurchasesManager !== "undefined") ? new PurchasesManager() : null;  // native IAP
     this._sound     = new SoundManager();
 
     // Hint tracking (3 free per game, unlimited premium)
@@ -71,6 +76,8 @@ class GameUI {
     this.engine = new GameEngine();
     this._startTimer();
     this._applyTheme(this.uiState.settings.theme || "green");
+    const _pack = this.uiState.settings.cardPack || "classic";
+    if (_pack !== "classic") this._applyCardPack(_pack);
 
     // Daily challenge state
     this._dailyDateStr   = null;    // date string of current daily ("2026-05-31")
@@ -86,10 +93,20 @@ class GameUI {
       onDragEnd:   (x, y) => this._onDragEnd(x, y),
     });
 
-    window.addEventListener("resize", () => {
+    // Viewport / orientation handling. WKWebView often reports the final size a beat
+    // after launch and on rotation, so we re-sync on several signals + short delays.
+    const onViewportChange = () => {
+      this._syncCardStyle();   // phone → simple cards, tablet → art
       this._resize();
       this._render();
-    });
+    };
+    this._onViewportChange = onViewportChange;
+    window.addEventListener("resize", onViewportChange);
+    window.addEventListener("orientationchange", () => setTimeout(onViewportChange, 150));
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", onViewportChange);
+    // Catch the settled viewport shortly after launch (fixes wrong-orientation first paint).
+    setTimeout(onViewportChange, 250);
+    setTimeout(onViewportChange, 800);
 
     // Sync isPremium + show/hide ad banner
     this.uiState.isPremium = this._isPremium;
@@ -100,6 +117,22 @@ class GameUI {
 
     // Fetch remote config in background (non-blocking)
     this._firebase.fetchConfig();
+
+    // Initialise RevenueCat on native, then reconcile premium status from the store.
+    // Store entitlement is the source of truth on mobile (survives reinstalls).
+    if (this._purchases && this._purchases.available) {
+      this._purchases.init().then(async (ready) => {
+        if (!ready) return;
+        const owned = await this._purchases.isPremiumActive();
+        if (owned && !this._isPremium) {
+          this._grantPremium();
+          this._render();
+        }
+        // Show the real localized store price on the Go Premium screen.
+        const price = await this._purchases.getPremiumPriceString();
+        if (price) { this.renderer.setPriceString(price); this._render(); }
+      });
+    }
 
     // Initialise AdMob on Capacitor (non-blocking; shows banner for free users)
     if (window.Capacitor) {
@@ -116,49 +149,77 @@ class GameUI {
     window.addEventListener("keydown", e => this._onKey(e));  // desktop fallback
 
     // Initial paint
+    this._syncCardStyle();
     this._render();
+  }
+
+  /**
+   * Decide card face style by DEVICE, not card width: phones use the crisp drawn
+   * faces (art is muddy on small screens), tablets/desktop keep the art.
+   * Phone = the shorter screen side ≤ 500px (true for all iPhones in any orientation;
+   * iPad mini and up stay on art).
+   */
+  _syncCardStyle() {
+    const minDim  = Math.min(window.innerWidth, window.innerHeight);
+    const isPhone = minDim <= 500;
+    this.renderer.setCardStyle(isPhone ? "simple" : "auto");
   }
 
   // ── Canvas sizing ────────────────────────────────────────────────────────
 
   _resize() {
     const dpr = window.devicePixelRatio || 1;
-    const W   = window.innerWidth;
-    const H   = window.innerHeight - this._headerOffset;
+    // The canvas is positioned inside the iOS safe area by CSS (top/left/right/bottom
+    // = env(safe-area-inset-*)), so its on-screen rect IS the true drawable area —
+    // no notch/Dynamic-Island/home-indicator clipping. Read it directly.
+    // The canvas fills the safe-area-padded body at 100%×100%, so clientWidth/Height
+    // give the true drawable area (insets excluded). Fall back to the window size if
+    // layout hasn't settled yet on the very first call.
+    let W = this.canvas.clientWidth;
+    let H = this.canvas.clientHeight;
+    if (W < 50)  W = window.innerWidth  || 320;
+    if (H < 50)  H = window.innerHeight || 480;
 
-    // Banner height reservation:
-    //   Web:       HTML #ad-strip div height (50px when visible)
-    //   Capacitor: native AdMob banner overlays the WebView from the bottom
-    //              — leave 60px so footer buttons aren't hidden under it
-    let bannerH = 0;
-    if (window.Capacitor && !this._isPremium) {
-      // Use the height reported by bannerAdSizeChanged; fall back to 72px safe default
-      bannerH = (this._ads && this._ads.bannerH) ? this._ads.bannerH : 72;
-    } else {
-      const adEl = document.getElementById("ad-strip");
-      bannerH = (adEl && adEl.style.display !== "none")
-                ? adEl.getBoundingClientRect().height || 50
-                : 0;
-    }
-
-    const canvasH = H - bannerH;
     this.canvas.width  = Math.round(W * dpr);
-    this.canvas.height = Math.round(canvasH * dpr);
-    this.canvas.style.width  = W + "px";
-    this.canvas.style.height = canvasH + "px";
+    this.canvas.height = Math.round(H * dpr);
 
     const ctx = this.canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    this.renderer.computeLayout(W, canvasH);
+    // The native AdMob banner (free users on Capacitor) is centered at the SCREEN
+    // bottom. Rather than reserving a separate felt strip below the footer (which left
+    // a dead band), we fold it INTO the footer band: the board extends straight down to
+    // the top of the footer, and the footer row holds the undo/redo icons on the left,
+    // the banner in the centre, and New Game / End Round on the right. Tell the renderer
+    // whether a banner is present + its size so it can size the band and keep the centre
+    // clear.
+    const bannerPresent = !!(window.Capacitor && !this._isPremium);
+    const platform = (window.Capacitor && window.Capacitor.getPlatform &&
+                      window.Capacitor.getPlatform()) || "web";
+    this.renderer._bannerInfo = {
+      present: bannerPresent,
+      platform,
+      w: (this._ads && this._ads.bannerW) ? this._ads.bannerW : 320,
+      h: (this._ads && this._ads.bannerH) ? this._ads.bannerH : 50,
+    };
+    this.renderer.computeLayout(W, H);
   }
 
   /** Show/hide the ad banner and re-layout. Call whenever _isPremium changes. */
   _syncAdBanner() {
     const adEl = document.getElementById("ad-strip");
     if (!adEl) return;
-    const show = !this._isPremium && !window.Capacitor;  // Capacitor uses AdMob native
+    // Web ad strip shows only for: free user + browser (not Capacitor) + CarbonAds
+    // is actually configured. Otherwise we'd reserve an empty bottom bar.
+    const carbonReady = !!(this._carbon && this._carbon.configured);
+    const show = !this._isPremium && !window.Capacitor && carbonReady;
     adEl.style.display = show ? "block" : "none";
+
+    if (show) {
+      this._carbon.mount(document.getElementById("carbon-host"));
+    } else if (this._carbon) {
+      this._carbon.remove();   // e.g. user just went premium
+    }
     this._resize();
   }
 
@@ -191,6 +252,7 @@ class GameUI {
       onDone,
     };
 
+    this._animBufBuilt = false;   // build the static buffer on the first tick
     if (this._rafId) cancelAnimationFrame(this._rafId);
     this._rafId = requestAnimationFrame(ts => this._animTick(ts));
   }
@@ -199,26 +261,40 @@ class GameUI {
     const a = this._anim;
     if (!a) return;
 
+    // Build the static board buffer once, so each frame is just a blit + 1 card.
+    if (!this._animBufBuilt) {
+      this.renderer.buildAnimBuffer(this.engine, this.uiState, a.dstRow, a.dstCol);
+      this._animBufBuilt = true;
+    }
+
     // Ease-out cubic: t → 1-(1-t)^3
     const raw = Math.min(1, (timestamp - a.t0) / a.duration);
     const t   = 1 - Math.pow(1 - raw, 3);
 
+    let fy = a.y0 + (a.y1 - a.y0) * t;
+    // Move-style hook: skins can declare anim.move === "arc" to lift the card mid-flight.
+    const sa = this.renderer._skinAnim;
+    if (sa && sa.move === "arc") fy -= Math.sin(Math.PI * t) * 42;
+
     const flyingCard = {
       card: a.card,
       x:    a.x0 + (a.x1 - a.x0) * t,
-      y:    a.y0 + (a.y1 - a.y0) * t,
+      y:    fy,
       dstRow: a.dstRow,
       dstCol: a.dstCol,
     };
 
-    this._render(flyingCard);
+    // Fast path: blit cached board + flying card. Fall back to full redraw if needed.
+    if (!this.renderer.blitAnimFrame(flyingCard)) this._render(flyingCard);
 
     if (raw < 1) {
       this._rafId = requestAnimationFrame(ts => this._animTick(ts));
     } else {
       // Animation complete
+      this.renderer.clearAnimBuffer();
       this._anim   = null;
       this._rafId  = null;
+      this._animBufBuilt = false;
       a.onDone();
     }
   }
@@ -248,10 +324,14 @@ class GameUI {
   _onTap(x, y) {
     if (this._anim) return;
 
+    // If an overlay was scaled to fit (landscape), map the tap into its coordinate
+    // space so buttons line up. Identity when no overlay is scaled (e.g. board taps).
+    [x, y] = this.renderer.mapOverlayTap(x, y);
+
     // Interstitial ad (blocks everything except premium CTA)
     if (this.uiState.adOverlay) {
       const hit = this.renderer.hitTestInterstitial(x, y);
-      if (hit === "continue") { this._ads.dismissInterstitial(); }
+      if (hit === "continue") { this._ads.dismissInterstitial(true); }  // always escapable
       if (hit === "premium")  { this._ads.premiumFromInterstitial(); }
       return;
     }
@@ -306,15 +386,31 @@ class GameUI {
     if (sc === "highscores") {
       const hit = this.renderer.hitTestHighScores(x, y);
       if (hit === "close")                           { this.uiState.screen = null; this._render(); }
-      else if (hit === "regular" || hit === "daily") { this.uiState.hsTab = hit; this._openHighScores(); }
+      else if (hit === "regular" || hit === "daily" || hit === "lifetime") { this.uiState.hsTab = hit; this._openHighScores(); }
       return;
     }
     if (sc === "themes") {
       const hit = this.renderer.hitTestThemes(x, y);
-      if (hit === "close") { this.uiState.screen = null; this._render(); }
-      else if (hit) {
-        this.uiState.settings.theme = hit;
-        this._applyTheme(hit);
+      if (!hit) return;
+      if (hit.type === "close") { this.uiState.screen = null; this._render(); return; }
+      if (hit.locked) {
+        // Premium-gated skin/pack → route to Go Premium (#27 gating).
+        this.uiState.premiumState = {
+          step: "features",
+          email: localStorage.getItem("soli_premium_email") || "",
+          isPremium: this._isPremium,
+        };
+        this.uiState.screen = "premium";
+        this._render();
+        return;
+      }
+      if (hit.type === "skin") {
+        this.uiState.settings.theme = hit.id;
+        this._applyTheme(hit.id);
+        this._saveSettings(); this._render();
+      } else if (hit.type === "pack" && hit.available) {
+        this.uiState.settings.cardPack = hit.id;
+        this._applyCardPack(hit.id);
         this._saveSettings(); this._render();
       }
       return;
@@ -328,17 +424,28 @@ class GameUI {
         if (this._cursorTick) { clearInterval(this._cursorTick); this._cursorTick = null; }
         this._render();
       } else if (hit === "buy") {
-        const STRIPE_URL = "https://buy.stripe.com/eVq14obMleKjepj57fcjS00";
-        if (window.Capacitor) {
-          import("@capacitor/browser").then(({ Browser }) => Browser.open({ url: STRIPE_URL })).catch(() => window.open(STRIPE_URL, "_blank"));
+        // Native (iOS/Android): Apple/Google REQUIRE in-app purchase — use RevenueCat,
+        // never the Stripe link. Web/desktop: keep the Stripe checkout.
+        if (this._purchases && this._purchases.available) {
+          this._buyPremiumNative();
         } else {
-          window.open(STRIPE_URL, "_blank");
+          const STRIPE_URL = "https://buy.stripe.com/eVq14obMleKjepj57fcjS00";
+          if (window.Capacitor) {
+            import("@capacitor/browser").then(({ Browser }) => Browser.open({ url: STRIPE_URL })).catch(() => window.open(STRIPE_URL, "_blank"));
+          } else {
+            window.open(STRIPE_URL, "_blank");
+          }
         }
       } else if (hit === "activate") {
-        // Move to the license-activation step
+        // Email-license activation on ALL platforms: a web/macOS/Windows buyer
+        // (Stripe → Firebase /licenses) enters their email here to unlock Premium and
+        // remove ads — including on iOS. This is a network check, not a store check.
         ps.step = "activate"; ps.emailActive = false; ps.result = undefined;
         this.uiState.premiumState = ps;
         this._render();
+      } else if (hit === "restore") {
+        // Apple/Google "Restore Purchases" (store IAP) — native only.
+        this._restorePremiumNative();
       } else if (hit === "back") {
         ps.step = "features"; ps.emailActive = false;
         this.uiState.premiumState = ps;
@@ -711,7 +818,7 @@ class GameUI {
   // ── Settings persistence ──────────────────────────────────────────────────
 
   _loadSettings() {
-    const defaults = { sound: true, theme: "green" };
+    const defaults = { sound: true, theme: "green", cardPack: "classic" };
     try {
       const raw = localStorage.getItem("soli_settings_v1");
       if (raw) return { ...defaults, ...JSON.parse(raw) };
@@ -725,16 +832,52 @@ class GameUI {
   }
 
   _applyTheme(id) {
-    const FELT_COLOURS = {
-      green:    "#1b5e3b",   // Classic Green
-      blue:     "#1a3f6e",   // Ocean
-      midnight: "#0d1b3e",   // Midnight Blue
-      darkfelt: "#2a2a2a",   // Dark Felt
-      purple:   "#3b1a5e",   // Royal Purple
-    };
-    const colour = FELT_COLOURS[id] || FELT_COLOURS.green;
-    PALETTE.felt = colour;
-    document.body.style.background = colour;
+    // Entitlement guard: only the free skin is allowed for non-premium users.
+    // (Protects against a stale localStorage value pointing at a premium skin.)
+    if (getSkin(id).premium && !this._isPremium) {
+      id = "green";
+      if (this.uiState.settings.theme !== "green") {
+        this.uiState.settings.theme = "green";
+        this._saveSettings();
+      }
+    }
+    // applySkin (ui/skins.js) rewrites the live PALETTE + body background.
+    const skin = applySkin(id);
+    this.renderer.setSkinAnim(skin.anim);   // enable/disable card sheen, move style
+    this._syncAmbient();                     // start/stop the ambient animation loop
+  }
+
+  /** Switch the card-face pack (no-op for unavailable slots or unentitled users). */
+  _applyCardPack(id) {
+    const pack = getCardPack(id);
+    if (!pack || !pack.available) return;
+    if (pack.premium && !this._isPremium) return;
+    this.renderer.loadCardPack(id, () => this._render());
+  }
+
+  /**
+   * Ambient animation loop — only runs while the active skin declares an animated
+   * effect (e.g. premium card sheen). Throttled to ~16fps and only repaints while
+   * the player is on the board (not in menus/overlays) to save battery.
+   */
+  _syncAmbient() {
+    const anim = this.renderer._skinAnim;
+    const want = !!(anim && anim.sheen);
+    if (want && !this._ambientId) {
+      let last = 0;
+      const loop = (ts) => {
+        this.renderer.setClock(ts);
+        const idleView = !this.uiState.menuOpen && !this.uiState.screen &&
+                         !this.uiState.message && !this.uiState.showGDPR &&
+                         !this.uiState.adOverlay && !this.uiState.winInput && !this._anim;
+        if (idleView && ts - last > 60) { last = ts; this._render(); }
+        this._ambientId = requestAnimationFrame(loop);
+      };
+      this._ambientId = requestAnimationFrame(loop);
+    } else if (!want && this._ambientId) {
+      cancelAnimationFrame(this._ambientId);
+      this._ambientId = null;
+    }
   }
 
   // ── GDPR ─────────────────────────────────────────────────────────────────
@@ -975,10 +1118,70 @@ class GameUI {
     this._render();
   }
 
+  /** Apply premium unlock from any source (RevenueCat, license, etc.). */
+  _grantPremium() {
+    this._isPremium        = true;
+    this.uiState.isPremium = true;
+    try { localStorage.setItem("soli_premium", JSON.stringify({ active: true })); } catch (_) {}
+    this._syncAdBanner();       // hide web ad strip
+    this._ads.removeBanner();   // remove native AdMob banner
+  }
+
+  /** Native in-app purchase via RevenueCat (iOS/Android only). */
+  async _buyPremiumNative() {
+    const ps = this.uiState.premiumState || {};
+    ps.checking = true; ps.result = undefined;
+    this.uiState.premiumState = ps;
+    this._render();
+
+    const res = await this._purchases.purchasePremium();
+    ps.checking = false;
+
+    if (res.premium) {
+      ps.isPremium = true; ps.result = true;
+      this._grantPremium();
+    } else if (res.cancelled) {
+      ps.result = undefined;   // user backed out — no error toast
+    } else {
+      ps.result = false;       // failed
+      // Feedback so the button doesn't feel dead (esp. on the simulator, which has
+      // no StoreKit). On a real device with the IAP live this path won't normally hit.
+      try { alert("Purchase couldn't be completed. On the iOS Simulator in‑app purchases aren't available — test on a real device or add a StoreKit Configuration file."); } catch (_) {}
+    }
+    this.uiState.premiumState = ps;
+    this._render();
+  }
+
+  /** Native "Restore Purchases" via RevenueCat (iOS/Android only). */
+  async _restorePremiumNative() {
+    const ps = this.uiState.premiumState || {};
+    ps.checking = true; ps.result = undefined;
+    this.uiState.premiumState = ps;
+    this._render();
+
+    const ok = await this._purchases.restore();
+    ps.checking = false;
+    ps.result   = ok ? true : false;
+    if (ok) {
+      ps.isPremium = true; this._grantPremium();
+      try { alert("Premium restored. Thank you!"); } catch (_) {}
+    } else {
+      try { alert("No previous purchase found to restore. Make sure you're signed into the same Apple ID. (In‑app purchases don't work on the iOS Simulator — test on a real device.)"); } catch (_) {}
+    }
+    this.uiState.premiumState = ps;
+    this._render();
+  }
+
   // ── High Scores — also fetch Firebase daily scores ────────────────────────
 
   async _openHighScores() {
-    const local   = { regular: this._stats.getHighScores("regular"), daily: this._stats.getHighScores("daily") };
+    const st = this._stats.getStats();
+    const local = {
+      regular:  this._stats.getHighScores("regular"),
+      daily:    this._stats.getHighScores("daily"),
+      lifetime: this._stats.getHighScores("lifetime"),
+      meta:     { total: st.totalScore || 0, games: st.played || 0, best: st.bestScore || 0 },
+    };
     this.uiState.highScores = local;
     this.uiState.hsTab      = this.uiState.hsTab || "regular";
     this.uiState.screen     = "highscores";
@@ -1143,16 +1346,9 @@ class GameUI {
         this._render();
       }
     );
-    // For browser: sync overlayState into uiState so renderer sees it
-    if (this._ads.overlayState) {
-      this.uiState.adOverlay = this._ads.overlayState;
-      // Register render callback on the overlay so countdown triggers redraws
-      this._ads.overlayState._renderFn = () => {
-        this.uiState.adOverlay = this._ads.overlayState;
-        this._render();
-      };
-      this._render();
-    }
+    // Overlay drawing is handled by the setOverlayCallback registered in the
+    // constructor — it fires for both the immediate browser path and the async
+    // AdMob-failure fallback, so the countdown always renders and never stalls.
   }
 
   // ── Daily Challenge ───────────────────────────────────────────────────────
