@@ -11,12 +11,17 @@
     /* Prevent page scroll — game fills the area below the header */
     html, body { overflow: hidden; height: 100%; }
 
-    /* Canvas sits fixed below the 64px AEI header */
+    /* Canvas fills the whole area below the 64px AEI header. The current game.js
+       sizes the drawing buffer from canvas.clientWidth/clientHeight, so the canvas
+       MUST have a real on-screen size — give it top/left/right/bottom (not just
+       top+left, which collapsed it and produced a blank board). */
     #game {
       display: block;
       position: fixed;
       top: 64px;
       left: 0;
+      right: 0;
+      bottom: 0;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
       -webkit-user-select: none;
