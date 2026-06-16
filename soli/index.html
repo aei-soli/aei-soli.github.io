@@ -160,11 +160,17 @@
   <script src="ui/input.js"></script>
   <script src="ui/game.js"></script>
   <script>
-    // Service worker powers offline caching for the WEB / PWA build only. In the
-    // native Capacitor app (iOS/Android) assets are bundled locally and SW
-    // registration against localhost fails — skip it there (and swallow any error).
-    if (!window.Capacitor && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    // No service worker. A cache-first SW used to cause stale-asset mismatches after
+    // deploys (old renderer.js + new skins.js → "PALETTE already declared"). Unregister
+    // any previously-installed SW and clear its caches so returning visitors get fresh
+    // files. (sw.js is now a self-destruct stub that also cleans up.)
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations()
+        .then((rs) => rs.forEach((r) => r.unregister()))
+        .catch(() => {});
+      if (window.caches && caches.keys) {
+        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
+      }
     }
   </script>
 </body>
