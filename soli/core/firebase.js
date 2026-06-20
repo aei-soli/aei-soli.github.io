@@ -17,6 +17,12 @@
 
 const FIREBASE_URL = "https://soli-game-default-rtdb.firebaseio.com";
 
+// Server-side licence-check endpoint (Cloudflare Worker). Premium verification is
+// server-side; the /licenses node is no longer publicly readable (anti-enumeration
+// hardening — SOLI task #24). The worker reads /licenses with the Firebase DB secret
+// and returns only { premium }. Update if the worker URL changes.
+const FUNCTIONS_URL = "https://soli-license-check.aei-soli.workers.dev";
+
 // Default remote config — matches macOS _RC_DEFAULTS exactly.
 // Used immediately; overwritten after fetchConfig() resolves.
 const RC_DEFAULTS = {
@@ -97,11 +103,17 @@ class FirebaseClient {
    */
   async checkLicense(email) {
     try {
-      const key = this._encodeEmail(email);
-      const res = await fetch(`${this._url}/licenses/${key}.json`,
-                              { signal: AbortSignal.timeout(8000) });
-      const txt = (await res.text()).trim();
-      return txt === "true";
+      // Server-side check via Cloud Function. The client never reads /licenses directly,
+      // so customer emails can't be enumerated. Same return contract as before.
+      const res = await fetch(`${FUNCTIONS_URL}/checkLicense`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email }),
+        signal:  AbortSignal.timeout(8000),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data && data.premium === true;
     } catch (_) {
       return null;
     }
