@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The SprintFleet Method: how Adrian Ionescu runs 30+ concurrent projects across 5 AI models and a local Mac cluster — budget cycles, model routing, and one starred human task per day. Free MIT-licensed Claude skill.">
+    <link rel="canonical" href="https://aei-digitalsolutions.com/sprintfleet/">
+    <meta property="og:title" content="The Fable 5 Allocation Scarcity: How I Run 30 Projects Across 5 AI Models (Without Drowning)">
+    <meta property="og:description" content="The SprintFleet Method — budget cycles, model routing, one starred human task per day. Free MIT-licensed Claude skill.">
+    <meta property="og:url" content="https://aei-digitalsolutions.com/sprintfleet/">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="https://aei-digitalsolutions.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How I Run 30 Projects Across 5 AI Models (Without Drowning)">
+    <meta name="twitter:description" content="The SprintFleet Method — budget cycles, model routing, one starred human task per day. Free Claude skill.">
+    <title>The SprintFleet Method | AEI Digital Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white font-bold p-2 rounded-lg tracking-wider text-sm shadow-md">AEI</div>
+                <span class="font-bold text-lg tracking-tight text-white">Digital Solutions</span>
+            </a>
+            <nav class="flex space-x-8 text-sm font-medium text-slate-400">
+                <a href="/#portfolio" class="hover:text-indigo-400 transition">Our Apps</a>
+                <a href="https://github.com/aei-soli/claude-skills" class="hover:text-indigo-400 transition">Claude Skills</a>
+                <a href="mailto:contact@aei-digitalsolutions.com" class="hover:text-indigo-400 transition">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 py-16">
+        <p class="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-4">The SprintFleet Method</p>
+        <h1 class="text-3xl sm:text-4xl font-bold text-white leading-tight mb-3">The Fable 5 Allocation Scarcity: How I Run 30 Projects Across 5 AI Models (Without Drowning)</h1>
+        <p class="text-sm text-slate-400 mb-10">by <span class="text-slate-300 font-medium">Adrian Ionescu</span> · July 2026 · <a href="https://github.com/aei-soli/claude-skills" class="text-indigo-400 hover:text-indigo-300">Free Claude skill on GitHub</a></p>
+
+        <article class="space-y-6 text-slate-300 leading-relaxed text-[17px]">
+            <p>Tuesday, 15:00. That's when my premium AI allocation resets, and that is when I used to discover I'd already spent it. Three client deadlines open, an app waiting for its App Store push, a research run half-configured—and the model I needed for the heaviest lifting was gone until next week. Everyone's wall lands on a different day; mine has a timestamp. The pattern is the same for anyone juggling professional work across AI subscriptions: you don't run out of AI; you run out of the <em>right</em> AI at the worst moment, with no plan for what happens next.</p>
+
+            <p>This structural headache became acute with Anthropic's release of Claude Fable 5. As a Mythos-class model, Fable 5 is an astonishing leap in reasoning, but accessing it feels like chasing a moving target. Anthropic made it available to Pro and Max subscribers on a temporary promotional basis—capped at 50% of our weekly limits—with rolling extensions (at this writing, extended through July 19) that keep us on edge. Because Fable 5 burns through weekly subscription allowances significantly faster than default models, it introduced a new kind of optimization anxiety. You can't just "use" Fable 5; you have to deploy it tactically before your quota evaporates or the promotional window finally closes.</p>
+
+            <p>I am a consultant in public administration. On paper, I run a consulting practice; in reality, the advent of reliable and advanced AI models led me to run thirty-one concurrent projects—client work in a couple of countries, three apps in development (one already in the App Store and on Google Play), a trading model, a funding pipeline, creative projects, and a building renovation. Five AI subscriptions and a small cluster of Macs running local models were supposed to make this manageable. For a long time, they mostly made it more elaborate.</p>
+
+            <h2 class="text-2xl font-bold text-white pt-4">The Forcing Event</h2>
+            <p>What changed everything was, oddly, this promotional bonus.</p>
+            <p>When Fable 5 launched, it inverted my usual problem. The question was no longer "how do I conserve usage?" but "how do I extract maximum value from this elite tier before the weekly limit hits zero?"</p>
+            <p>The unique, time-limited opportunity to use Fable 5 acted as a massive operational accelerator. To ensure my entire portfolio benefited from the deep analytical and scientific reasoning capabilities that Fable 5 offered—and which I was actively experiencing in real-time—I deliberately pulled forward and launched as many of my pending projects as possible all at once. If a project was on my roadmap for the year, it was started that week.</p>
+            <p>The week that followed was not dignified. There were white nights keeping runs going and eyes permanently on the Usage menu in the Claude Cowork app, watching percentage bars the way you watch fuel gauges. But under that pressure, something took shape that I have used every week since: a routing discipline.</p>
+            <p>Fable was reserved for the tasks only Fable could handle—architecture decisions, complex analysis, prose that had to be right the first time. Everything else was pushed down the fleet: Opus for heavy builds, Sonnet as the everyday workhorse, Gemini for long-document research, Grok for live market signal, Grok Build for app security audit, and my local Mac cluster (running Gemma and Llama via Ollama) for anything confidential or batchable overnight. I created a shortlist for the scarce model, a burn-down schedule tied to reset times, and a written fallback for the moment the bar hit zero.</p>
+            <p>None of this was designed on a whiteboard. It was triage. But triage, it turns out, is a good designer.</p>
+            <p>That same week produced a second discovery: Claude Code. I had been treating AI coding as a chat activity—paste, copy, paste back. Claude Code is a different animal: an agentic harness where the model works directly in the codebase, fast and precise, running long autonomous builds while I did something else entirely. It became the fleet's precision tool, and it taught me that <em>where</em> a model runs matters nearly as much as <em>which</em> model runs.</p>
+
+            <h2 class="text-2xl font-bold text-white pt-4">The Two Lessons That Survived</h2>
+            <p>The promotional window keeps getting extended, but two structural realities proved permanent.</p>
+            <p><strong class="text-white">Usage budgets are cycles, not tanks.</strong> Whatever remains of a premium allocation when the reset arrives evaporates. It does not roll over. Once you see that, the strategy writes itself: treat each reset-to-reset window as a separate budget cycle, front-load the most important premium work into the earliest cycle, and deliberately burn down whatever remains before the boundary—on the front of the shortlist, not on whatever happens to be open. My sprint plans now open with: "Two premium cycles this sprint. Cycle 1: 47% remains until Tuesday 15:00 and does not carry over—spend it today, on these two tasks, in this order."</p>
+            <p><strong class="text-white">Only human-gated work slips—and white nights don't scale.</strong> After a few weeks of planned sprints, I had evidence. The AI lanes finished reliably. What piled up were the tasks gated on me: a decision, a review, a login, a send button, a signature. And my heroic solution from the bonus week—just stay up—was a one-time stunt, not a system. The fix was structural: schedule the human first. Every day gets exactly one starred must-do—the single thing that must happen, chosen the week before. Reading days are separated from decision days, because decisions made fresh on accumulated material beat decisions forced mid-stream at 23:40. The models get scheduled around the human, not the other way around.</p>
+
+            <h2 class="text-2xl font-bold text-white pt-4">The Method, in One Screen</h2>
+            <p>What emerged is a two-layer system I call the SprintFleet Method.</p>
+            <p>The <strong class="text-white">portfolio layer</strong> is a master tracker—a spreadsheet with one row per project: number, category, priority, status, and the cell I consider the most important in the system, a concrete Next Step. A project with an empty Next Step is stalled by definition. Complex projects get a roadmap sheet whose task rows carry an AI Prompt column—a ready-to-paste prompt written at planning time, when context is fresh, so that any future session, human or machine, can execute the task cold, months later.</p>
+            <p>The <strong class="text-white">sprint layer</strong> cuts a one-week plan from that tracker. A routing table assigns every task to its lane: premium shortlist, workhorse model, research model, overnight batch, or me. A daily schedule puts the human column first—one star per day. A scoreboard tracks each project against its sprint goal. A list of numbered rules records, in advance, the decisions you don't want to make mid-crisis: the slippage order when things go wrong, the quality gates that cannot be skipped, and the degradation path if a budget dies early. The week runs on a two-minute check-in each morning and a remediation playbook for when reality misbehaves. The sprint-end report shows where the subscriptions and hours actually went, synced back to the tracker so nothing is lost between weeks.</p>
+
+            <h2 class="text-2xl font-bold text-white pt-4">A Real Week</h2>
+            <p>A recent sprint, lightly dramatized and anonymized: Monday 15:00, usage screen verified: two premium cycles ahead, 47% of the bar remaining in the first. That afternoon burned the 47% deliberately—an engineering dossier's architecture pass first, a research-run design second. Tuesday's star was a five-minute human task—a send button—that had slipped twice the sprint before. Midweek, a client emergency ate two mornings whole. The playbook did what playbooks are for: the missed stars were not stacked forward into an impossible Thursday; the lowest-priority one was dropped outright, per the slippage order written on Monday when I was calm. The deadline lane kept its protection. Saturday was a reading day, no decisions allowed. Sunday, fresh, the decisions took twenty minutes. The Friday report showed one lane had run dry by Wednesday—evidence, not guilt, and next sprint's pacing adjusted accordingly.</p>
+            <p>The honest failure worth reporting: my own index file drifted out of sync with the master tracker, and I nearly numbered a new project into a slot that was already taken. The method now has a rule about declared sources of truth because I broke one.</p>
+
+            <h2 class="text-2xl font-bold text-white pt-4">I Turned It into a Free Claude Skill</h2>
+            <p>The method is packaged as a Claude skill—instructions Claude follows so that "help me get my projects under control" or "plan my week" produces the whole system: tracker, routing, budget cycles, starred days, check-ins, and reports. Building it, I benchmarked it against unaided Claude on identical planning tasks: plans made with the skill satisfied 21 of 21 quality assertions; without, 16 of 21—and the misses were the expensive ones: burn-down scheduled backwards, no degradation path, no slippage order.</p>
+            <p>It is free and MIT-licensed. In Claude Code or the Claude desktop app:</p>
+            <pre class="bg-slate-950 border border-slate-800 rounded-lg p-4 text-sm text-emerald-400 overflow-x-auto"><code>/plugin marketplace add aei-soli/claude-skills</code></pre>
+            <p>Source and details: <a href="https://github.com/aei-soli/claude-skills" class="text-indigo-400 hover:text-indigo-300">github.com/aei-soli/claude-skills</a>. A paid edition—tracker-building scripts, a live dashboard, maintained model-tier maps—is in the works, but the method itself is entirely free.</p>
+
+            <h2 class="text-2xl font-bold text-white pt-4">If You Take One Thing</h2>
+            <p>Verify your usage screen before you plan, not after you hit the wall. And give every day exactly one starred human task. The fleet is genuinely remarkable—it will do more than you think. But it works for you only if the admiral shows up rested.</p>
+
+            <p class="text-sm text-slate-500 border-t border-slate-800 pt-6 mt-10"><em>Adrian Ionescu is a public administration consultant working in Romania and South-East Europe, and builds AI-assisted tools at AEI Digital Solutions. The SprintFleet Method is a free, MIT-licensed Claude skill: <a href="https://github.com/aei-soli/claude-skills" class="text-indigo-400 hover:text-indigo-300">aei-soli/claude-skills</a>.</em></p>
+        </article>
+    </main>
+
+    <footer class="bg-slate-950 border-t border-slate-900 py-12 mt-20 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto px-4 space-y-4">
+            <p class="font-semibold text-slate-400 text-sm">AEI Digital Solutions</p>
+            <p>Direct Inquiries: contact@aei-digitalsolutions.com</p>
+            <p class="pt-4 border-t border-slate-900/60 max-w-md mx-auto text-[11px]">© 2026 AEI Digital Solutions.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
