@@ -1,3 +1,13 @@
 .DS_Store
 */.DS_Store
 **/.DS_Store
+
+# fisiere GIS brute peste limita Cloudflare Pages (25 MiB) - se publica doar arhiva date-gis-apl1.zip
+apl-reforma/fisiere/Comparatie_si_propunere_revizuita.gpkg
+apl-reforma/fisiere/Comparatie_si_propunere_revizuita.qgs
+
+# _headers valid doar la radacina; copia din apl-reforma nu se publica
+apl-reforma/_headers
+
+# fisier temporar ramas de la zip (de sters manual)
+apl-reforma/fisiere/zi3IwB4I

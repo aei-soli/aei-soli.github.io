@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Analiza comparativă a amalgamării voluntare a APL de nivelul I din Republica Moldova față de scenariile de reformă administrativ-teritorială din 2018, cu propuneri pentru faza normativă. Hartă interactivă, tabele și note de fundamentare.">
+    <meta property="og:title" content="Reforma administrativ-teritorială — amalgamarea APL 1 | AEI Digital Solutions">
+    <meta property="og:description" content="Amalgamarea voluntară vs. scenariile 2018 și propunerea finală pentru faza normativă (225 UAT). Hartă interactivă și date descărcabile.">
+    <meta property="og:type" content="website">
+    <title>Reforma administrativ-teritorială — amalgamarea APL 1 | AEI Digital Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="../index.html" class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white font-bold p-2 rounded-lg tracking-wider text-sm shadow-md">AEI</div>
+                <span class="font-bold text-lg tracking-tight text-white">Digital Solutions</span>
+            </a>
+            <nav class="flex space-x-6 text-sm font-medium text-slate-400">
+                <a href="harta.html" class="hover:text-indigo-400 transition">Harta interactivă</a>
+                <a href="registru.html" class="hover:text-indigo-400 transition">Registrul online</a>
+                <a href="#rezultate" class="hover:text-indigo-400 transition">Rezultate</a>
+                <a href="#metodologie" class="hover:text-indigo-400 transition">Metodologie</a>
+                <a href="#fisiere" class="hover:text-indigo-400 transition">Descărcări</a>
+                <a href="mailto:contact@aei-digitalsolutions.com" class="hover:text-indigo-400 transition">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="relative py-16 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <span class="text-xs font-semibold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full">Cercetare aplicată · Republica Moldova · Versiunea: 18 august 2026</span>
+            <h1 class="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                Reforma administrativ-teritorială:<br class="hidden sm:block"> amalgamarea voluntară față de scenariile din 2018
+            </h1>
+            <p class="mt-5 text-lg text-slate-400 max-w-3xl mx-auto leading-relaxed">
+                Analiză comparativă a rezultatelor fazei voluntare de amalgamare a APL de nivelul I (august 2026) cu cele trei scenarii ale studiului din decembrie 2018, și propunerea finală pentru faza normativă — determinată iterativ, prin patru iterații de modelare comparate sistematic, pe geometrie corectată.
+            </p>
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <a href="harta.html" class="inline-flex items-center bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-lg transition">
+                    Deschide harta interactivă →
+                </a>
+                <a href="registru.html" class="inline-flex items-center border border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-300 hover:text-white font-semibold text-sm px-6 py-3 rounded-xl transition">
+                    Consultă registrul online →
+                </a>
+                <a href="#fisiere" class="inline-flex items-center border border-slate-700 hover:border-indigo-500/40 text-slate-300 hover:text-white font-semibold text-sm px-6 py-3 rounded-xl transition">
+                    Descarcă datele și notele
+                </a>
+            </div>
+            <p class="mt-6 text-xs text-slate-500 max-w-2xl mx-auto">
+                Analiza acoperă teritoriul controlat de autoritățile constituționale ale Republicii Moldova (fără regiunea transnistreană).
+                Populația: Recensământul 2024 — reședința obișnuită. Material analitic independent; nu reprezintă politică guvernamentală adoptată.
+            </p>
+        </div>
+    </section>
+
+    <section id="rezultate" class="py-14 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="border-b border-slate-800 pb-6 mb-10">
+            <h2 class="text-2xl font-bold text-white tracking-tight">Constatările principale</h2>
+            <p class="text-slate-400 text-sm mt-1">Situația la 17 august 2026, pe baza tabloului de bord public de monitorizare a amalgamării.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-5">
+                <div class="text-3xl font-extrabold text-white">162</div>
+                <div class="text-xs uppercase tracking-wider text-indigo-400 font-semibold mt-1">clustere voluntare</div>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">558 din 890 APL participă la amalgamarea voluntară; 125 clustere finalizate.</p>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-5">
+                <div class="text-3xl font-extrabold text-white">0,40</div>
+                <div class="text-xs uppercase tracking-wider text-indigo-400 font-semibold mt-1">Jaccard vs. scenariul moderat</div>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">Procesul voluntar urmează logica scenariului moderat 2018 (231 UAT), dar la scară mai fragmentată.</p>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-5">
+                <div class="text-3xl font-extrabold text-white">272</div>
+                <div class="text-xs uppercase tracking-wider text-indigo-400 font-semibold mt-1">APL de alocat normativ</div>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">APL sub 3.000 de locuitori rămase în afara procesului voluntar, vizate de faza normativă.</p>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-5">
+                <div class="text-3xl font-extrabold text-white">225</div>
+                <div class="text-xs uppercase tracking-wider text-indigo-400 font-semibold mt-1">UAT în propunerea finală</div>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">Inclusiv Chișinău și Bălți ca ancore municipale; timp mediu de acces 12,7 min, o singură alocare peste 30 de minute.</p>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8 items-start">
+            <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+                <p>
+                    <span class="text-white font-semibold">Ce am comparat.</span>
+                    Componența celor 162 de clustere formate voluntar (inclusiv unitățile deja amalgamate Leova și Călinești) a fost
+                    confruntată, primărie cu primărie, cu cele trei scenarii spațiale ale studiului din decembrie 2018
+                    (moderat — 231 UAT, intermediar — 154, compact — 93) și cu registrul procesului de amalgamare normativă.
+                </p>
+                <p>
+                    <span class="text-white font-semibold">Ce rezultă.</span>
+                    Amalgamarea voluntară reproduce nucleele scenariului moderat: 70 din 162 de clustere se suprapun în proporție de
+                    cel puțin 50% cu grupurile acestuia. Prețul voluntariatului este fragmentarea — 104 clustere au sub 5.000 de locuitori,
+                    iar 26 au centre cu mai puțin de 1.500. Recalculate cu populația recensământului din 2024, chiar 43 de unități
+                    ale scenariului moderat ar coborî sub 3.000 de locuitori — un argument pentru unități mai mari acolo unde geografia o permite.
+                </p>
+                <p>
+                    <span class="text-white font-semibold">Propunerea finală pentru faza normativă.</span>
+                    Patru iterații de modelare (Iterația 1 — ancorată în designul teritorial al studiului 2018; Iterația 2 — timpi de parcurs măsurați pe rețeaua rutieră OSM; Iterația 3 — varianta hibridă de consens și arbitraj; Iterația 4 — geometria corectată cu 891 UAT) au fost sintetizate printr-o regulă de decizie explicită: 189 de alocări de consens deplin, 66 preluate din Iterația 4 (timp rutier superior) și 16 ajustate către partenerii din scenariul moderat 2018, la timp egal sau mai bun. Rezultatul: 225 UAT, o singură excepție sub 3.000 de locuitori (Giurgiulești, statut special), 51 de clustere inter-raionale — raionul nu este criteriu sau barieră. Clusterele voluntare rămân nuclee intangibile — componența inițială și centrele decise se păstrează, dar 100 dintre ele au fost extinse cu UAT alocate normativ; niciunul divizat, niciun centru decis înlocuit.
+                </p>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-5">
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Indicatori comparativi</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-700">
+                                <th class="py-2 pr-3 font-semibold">Varianta</th>
+                                <th class="py-2 pr-3 font-semibold text-right">Unități</th>
+                                <th class="py-2 pr-3 font-semibold text-right">Pop. mediană</th>
+                                <th class="py-2 font-semibold text-right">&lt;5.000 loc.</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-300">
+                            <tr class="border-b border-slate-800"><td class="py-2 pr-3">Situația actuală</td><td class="text-right">890</td><td class="text-right">1.250</td><td class="text-right">839</td></tr>
+                            <tr class="border-b border-slate-800"><td class="py-2 pr-3">Clustere voluntare (2026)</td><td class="text-right">162</td><td class="text-right">4.369</td><td class="text-right">104</td></tr>
+                            <tr class="border-b border-slate-800"><td class="py-2 pr-3">Scenariul moderat (2018)</td><td class="text-right">230</td><td class="text-right">5.404</td><td class="text-right">105</td></tr>
+                            <tr class="border-b border-slate-800"><td class="py-2 pr-3">Scenariul intermediar (2018)</td><td class="text-right">153</td><td class="text-right">8.357</td><td class="text-right">32</td></tr>
+                            <tr class="border-b border-slate-800"><td class="py-2 pr-3">Scenariul compact (2018)</td><td class="text-right">94</td><td class="text-right">15.406</td><td class="text-right">3</td></tr>
+                            <tr class="border-b border-slate-800"><td class="py-2 pr-3">Iterația 1 — V1 (strict legală)</td><td class="text-right">222</td><td class="text-right">5.841</td><td class="text-right">83</td></tr>
+                            <tr class="border-b border-slate-800"><td class="py-2 pr-3">Iterația 1 — V2 (harta completă)</td><td class="text-right">197</td><td class="text-right">6.294</td><td class="text-right">66</td></tr>
+                            <tr class="border-b border-slate-800"><td class="py-2 pr-3">Iterația 3 — V3 (hibrid)</td><td class="text-right">222</td><td class="text-right">6.021</td><td class="text-right">76</td></tr>
+                            <tr class="bg-indigo-500/10"><td class="py-2 pr-3 font-semibold text-white">PROPUNEREA FINALĂ</td><td class="text-right font-semibold text-white">225</td><td class="text-right font-semibold text-white">6.099</td><td class="text-right font-semibold text-white">71</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-3">Populația: Recensământ 2024, reședința obișnuită. Detaliile complete — în registrele Excel descărcabile.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-14 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="border-b border-slate-800 pb-6 mb-10">
+            <h2 class="text-2xl font-bold text-white tracking-tight">Hărțile</h2>
+            <p class="text-slate-400 text-sm mt-1">Apasă pe orice hartă pentru versiunea la rezoluție completă. Pentru explorare pe fiecare primărie, folosește <a href="harta.html" class="text-indigo-400 hover:text-indigo-300">harta interactivă</a>.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <a href="img/harta_1_voluntara.png" target="_blank" class="group bg-slate-800/40 border border-slate-800 rounded-2xl p-3 hover:border-indigo-500/40 transition">
+                <img src="img/harta_1_voluntara.png" alt="Harta amalgamării voluntare — 162 clustere" class="rounded-xl w-full" loading="lazy">
+                <p class="text-xs text-slate-300 mt-3 px-1 font-semibold group-hover:text-white">1 · Amalgamarea voluntară (162 clustere)</p>
+            </a>
+            <a href="img/harta_2_scen_moderat.png" target="_blank" class="group bg-slate-800/40 border border-slate-800 rounded-2xl p-3 hover:border-indigo-500/40 transition">
+                <img src="img/harta_2_scen_moderat.png" alt="Scenariul moderat 2018" class="rounded-xl w-full" loading="lazy">
+                <p class="text-xs text-slate-300 mt-3 px-1 font-semibold group-hover:text-white">2 · Scenariul moderat 2018 (231 UAT)</p>
+            </a>
+            <a href="img/harta_3_scen_intermediar.png" target="_blank" class="group bg-slate-800/40 border border-slate-800 rounded-2xl p-3 hover:border-indigo-500/40 transition">
+                <img src="img/harta_3_scen_intermediar.png" alt="Scenariul intermediar 2018" class="rounded-xl w-full" loading="lazy">
+                <p class="text-xs text-slate-300 mt-3 px-1 font-semibold group-hover:text-white">3 · Scenariul intermediar 2018 (154 UAT)</p>
+            </a>
+            <a href="img/harta_4_scen_compact.png" target="_blank" class="group bg-slate-800/40 border border-slate-800 rounded-2xl p-3 hover:border-indigo-500/40 transition">
+                <img src="img/harta_4_scen_compact.png" alt="Scenariul compact 2018" class="rounded-xl w-full" loading="lazy">
+                <p class="text-xs text-slate-300 mt-3 px-1 font-semibold group-hover:text-white">4 · Scenariul compact 2018 (93 UAT)</p>
+            </a>
+            <a href="img/harta_5_propunere_V1.png" target="_blank" class="group bg-slate-800/40 border border-slate-800 rounded-2xl p-3 hover:border-indigo-500/40 transition">
+                <img src="img/harta_5_propunere_V1.png" alt="Propunerea V1" class="rounded-xl w-full" loading="lazy">
+                <p class="text-xs text-slate-300 mt-3 px-1 font-semibold group-hover:text-white">5 · Iterația 1 — V1, strict legală (222 unități)</p>
+            </a>
+            <a href="img/harta_8_FINAL.png" target="_blank" class="group bg-slate-800/40 border border-indigo-500/30 rounded-2xl p-3 hover:border-indigo-400 transition">
+                <img src="img/harta_8_FINAL.png" alt="Propunerea finală" class="rounded-xl w-full" loading="lazy">
+                <p class="text-xs text-indigo-300 mt-3 px-1 font-semibold group-hover:text-white">★ PROPUNEREA FINALĂ — 225 UAT (sinteza modelărilor)</p>
+            </a>
+        </div>
+    </section>
+
+
+    <section id="metodologie" class="py-14 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="border-b border-slate-800 pb-6 mb-10">
+            <h2 class="text-2xl font-bold text-white tracking-tight">Metodologia</h2>
+            <p class="text-slate-400 text-sm mt-1">Cum s-a ajuns, pas cu pas, la propunerea finală. Textul complet: <a href="fisiere/Metodologia_propunerii_finale.pdf" class="text-indigo-400 hover:text-indigo-300">Metodologia (PDF)</a>.</p>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-6 text-sm text-slate-300 leading-relaxed">
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6">
+                <h3 class="text-white font-bold mb-3">1 · Pornim de la realitate</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Nu de la o hartă ideală, ci de la cele 162 de clustere formate voluntar — tratate ca <span class="text-slate-200 font-semibold">nuclee intangibile</span>: componența inițială și centrul decis se păstrează integral, dar nucleele pot primi noi UAT (100 de clustere au fost extinse prin alocările normative). Problema rămasă: 272 de APL sub 3.000 de locuitori, de alocat.</p>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6">
+                <h3 class="text-white font-bold mb-3">2 · Referențialul 2018</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Scenariile studiului din decembrie 2018 (Anexele 9–12) sunt scheletul de proiectare: procesul voluntar urmează scenariul moderat (Jaccard 0,40), deci partenerii de grup din acest scenariu sunt candidații naturali de alocare.</p>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6">
+                <h3 class="text-white font-bold mb-3">3 · Analiza multicriterială</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Șase criterii operaționalizate: accesibilitate (timp rutier OSM, prag 30–35 min, contiguitate obligatorie) · demografic (min. 3.000; centre conform Anexei 9) · financiar (IVPF ≥150 lei + 40–50% din maxim) · coerența cu designul 2018 · protecții etno-demografice (UTAG, Taraclia) · <span class="text-slate-200 font-semibold">neutralitatea raionului</span>.</p>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6 lg:col-span-2">
+                <h3 class="text-white font-bold mb-3">4 · Determinarea iterativă</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Patru iterații, fiecare verificând-o pe precedenta: <span class="text-slate-200">Iterația 1</span> (V1/V2 — designul 2018, registrul normativ complet) → <span class="text-slate-200">Iterația 2</span> (A/B — timpi rutieri măsurați, test fiscal) → <span class="text-slate-200">Iterația 3</span> (hibrid: consens + arbitraj pe criterii) → <span class="text-slate-200">Iterația 4</span> (geometria corectată, 891 UAT). Finala sintetizează Iterațiile 3 și 4: 189 alocări de consens + 66 preluate + 16 ajustate — fiecare cu proveniența deciziei și criteriul decisiv înregistrate. Propunerea este integral auditabilă.</p>
+            </div>
+            <div class="bg-indigo-500/10 border border-indigo-500/30 rounded-2xl p-6">
+                <h3 class="text-white font-bold mb-3">Instrumente AI</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Propunerile au fost determinate <span class="text-slate-200 font-semibold">interactiv și iterativ</span> cu sprijinul modelelor de inteligență artificială <span class="text-indigo-300 font-semibold">Claude Fable 5</span> și <span class="text-indigo-300 font-semibold">OpenAI Sol 5.6 Extra High</span>, sub coordonarea și validarea autorului — fiecare iterație verificată încrucișat de celălalt model, divergențele soluționate pe criterii.</p>
+            </div>
+        </div>
+    </section>
+    <section id="fisiere" class="py-14 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="border-b border-slate-800 pb-6 mb-10">
+            <h2 class="text-2xl font-bold text-white tracking-tight">Documente și date descărcabile</h2>
+            <p class="text-slate-400 text-sm mt-1">Toate materialele pot fi consultate și reutilizate cu citarea sursei.</p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6">
+                <h3 class="text-white font-bold">Note de fundamentare</h3>
+                <ul class="mt-4 space-y-3 text-sm">
+                    <li><a href="fisiere/Metodologia_propunerii_finale.pdf" class="text-indigo-400 hover:text-indigo-300 font-semibold">★ Metodologia propunerii finale (PDF) →</a>
+                        <span class="block text-xs text-slate-500 mt-0.5">De la realitatea amalgamării voluntare, prin criteriile 2018, la determinarea iterativă. <a href="fisiere/Metodologia_propunerii_finale.docx" class="text-slate-400 hover:text-white">[DOCX]</a></span></li>
+                    <li><a href="fisiere/Nota_finala_propunere_amalgamare.pdf" class="text-indigo-400 hover:text-indigo-300 font-semibold">★ Nota finală — propunerea pentru faza normativă (PDF) →</a>
+                        <span class="block text-xs text-slate-500 mt-0.5">Sinteza modelărilor, regulile de decizie, harta finală. <a href="fisiere/Nota_finala_propunere_amalgamare.docx" class="text-slate-400 hover:text-white">[DOCX]</a></span></li>
+                    <li><a href="fisiere/Nota_fundamentare_amalgamare_normativa.pdf" class="text-indigo-400 hover:text-indigo-300">Iterația 1 — analiza comparativă și variantele V1/V2 (PDF) →</a>
+                        <span class="block text-xs text-slate-500 mt-0.5">Amalgamarea voluntară vs. scenariile 2018; criterii, hărți. <a href="fisiere/Nota_fundamentare_amalgamare_normativa.docx" class="text-slate-400 hover:text-white">[DOCX]</a></span></li>
+                    <li><a href="fisiere/Nota_comparatie_pachete_si_V3.pdf" class="text-indigo-400 hover:text-indigo-300">Iterația 3 — compararea primelor iterații și varianta hibridă V3 (PDF) →</a>
+                        <span class="block text-xs text-slate-500 mt-0.5">Validare încrucișată între Iterațiile 1 și 2, reguli de arbitraj, rezultate. <a href="fisiere/Nota_comparatie_pachete_si_V3.docx" class="text-slate-400 hover:text-white">[DOCX]</a></span></li>
+                </ul>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6">
+                <h3 class="text-white font-bold">Registre de date (Excel)</h3>
+                <ul class="mt-4 space-y-3 text-sm">
+                    <li><a href="fisiere/Propunerea_FINALA_amalgamare.xlsx" class="text-indigo-400 hover:text-indigo-300 font-semibold">★ Registrul propunerii finale (XLSX) →</a>
+                        <span class="block text-xs text-slate-500 mt-0.5">Alocările cu proveniența deciziei, cele 225 de unități, cele 16 ajustări justificate, comparația celor 7 variante. Același conținut poate fi <a href="registru.html" class="text-indigo-400 hover:text-indigo-300">consultat online, fără descărcare →</a></span></li>
+                    <li><a href="fisiere/Comparatie_amalgamare_2026_vs_scenarii_2018.xlsx" class="text-indigo-400 hover:text-indigo-300">Registrul comparativ complet — Iterația 1 (XLSX) →</a>
+                        <span class="block text-xs text-slate-500 mt-0.5">12 foi: toate cele 890 APL, componența clusterelor și a scenariilor 2018, criterii, propunerile V1/V2.</span></li>
+                    <li><a href="fisiere/Comparatie_pachete_si_propunerea_V3.xlsx" class="text-indigo-400 hover:text-indigo-300">Registrul variantei hibride V3 — Iterația 3 (XLSX) →</a>
+                        <span class="block text-xs text-slate-500 mt-0.5">Alocările de consens, cele 135 de divergențe arbitrate cu criteriul decisiv, unitățile rezultate cu testul fiscal.</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="mt-8 bg-slate-800/40 border border-slate-800 rounded-2xl p-6">
+            <h3 class="text-white font-bold">Date GIS (QGIS / GeoJSON)</h3>
+            <p class="text-xs text-slate-500 mt-1">Straturi vectoriale pe geometria corectată (891 UAT, OSM). Deschide fișierul .qgs în QGIS pentru proiectul complet cu 10 straturi.</p>
+            <ul class="mt-4 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                <li><a href="fisiere/propunere_FINALA.geojson" class="text-indigo-400 hover:text-indigo-300 font-semibold">★ Propunerea finală (GeoJSON) →</a>
+                    <span class="block text-xs text-slate-500 mt-0.5">GeoJSON, ~9,7 MB, versiunea 18.08.2026. Toate cele 891 UAT cu cluster final, centru, timpi rutieri, indicatori demografici și fiscali. Reutilizare liberă cu citarea sursei.</span></li>
+                <li><a href="fisiere/date-gis-apl1.zip" class="text-indigo-400 hover:text-indigo-300 font-semibold">Pachet QGIS — arhivă GIS (ZIP) →</a>
+                    <span class="block text-xs text-slate-500 mt-0.5">ZIP, ~21 MB, versiunea 18.08.2026. Conține GeoPackage-ul cu 10 straturi (registrul de bază, perimetrul analitic, teritoriile excluse, golurile de acoperire, iterațiile și varianta recomandată), proiectul QGIS (.qgs, cale relativă) și README-ul metodologic. Se dezarhivează într-un singur dosar și se deschide fișierul .qgs în QGIS.</span></li>
+                <li><a href="fisiere/README_FINAL.md" class="text-indigo-400 hover:text-indigo-300">README — metodologia variantei finale →</a>
+                    <span class="block text-xs text-slate-500 mt-0.5">Rezumatul construcției: consens, preluări, ajustări, verificări de integritate.</span></li>
+            </ul>
+        </div>
+        <div class="mt-8 bg-slate-800/20 border border-slate-800 rounded-2xl p-5 text-xs text-slate-500 leading-relaxed">
+            <span class="font-semibold text-slate-400">Cum citim harta.</span>
+            Fiecare strat colorează unitățile propuse; culorile disting doar unitățile vecine între ele și <span class="text-slate-400">nu se corespund între straturi</span> — același teritoriu poate avea culori diferite în scenarii diferite. Gri deschis = APL neamalgamate; gri închis = orașe ≥10.000 de sine stătătoare; hașură = APL alocate normativ prin propunere; teritoriul din afara analizei (regiunea transnistreană, or. Chișinău/Bălți pe straturile istorice) apare estompat.
+            <br><br><span class="font-semibold text-slate-400">Avertisment metodologic.</span>
+            Timpii și distanțele sunt estimați pe rețeaua rutieră OpenStreetMap; nu reprezintă navete observate, fluxuri de elevi sau pacienți, trafic ori orare de transport public. Propunerea constituie o bază tehnică pentru validare și consultare. Observații și corecturi: <a href="mailto:contact@aei-digitalsolutions.com" class="text-indigo-400">contact@aei-digitalsolutions.com</a>.
+            <br><br><span class="font-semibold text-slate-400">Surse și metodă.</span>
+            Tabloul de bord public de monitorizare a amalgamării (Power BI, extras la 17.08.2026) · Studiul privind scenariile de reformă
+            administrativ-teritorială (decembrie 2018), inclusiv Anexele 9–12 · Recensământul populației și locuințelor 2024 (populația cu
+            reședința obișnuită) · Capacitatea fiscală IVPF per capita (execuție 2024). Distanțele rutiere: rețeaua OpenStreetMap.
+            Analiza este un material de lucru analitic și nu reprezintă o poziție oficială. Rețeaua rutieră și geometriile administrative: OpenStreetMap/Geofabrik Moldova (04.08.2026). Propunerile au fost determinate interactiv și iterativ cu sprijinul modelelor de inteligență artificială Claude Fable 5 și OpenAI Sol 5.6 Extra High, sub coordonarea și validarea autorului. Ultima actualizare: 18 august 2026.
+        </div>
+    </section>
+
+    <footer class="border-t border-slate-800 py-8 mt-6">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-3">
+            <span>© 2026 AEI Digital Solutions · aei-digitalsolutions.com</span>
+            <div class="flex space-x-5">
+                <a href="../index.html" class="hover:text-slate-300 transition">Acasă</a>
+                <a href="harta.html" class="hover:text-slate-300 transition">Harta interactivă</a>
+                <a href="mailto:contact@aei-digitalsolutions.com" class="hover:text-slate-300 transition">Contact</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
