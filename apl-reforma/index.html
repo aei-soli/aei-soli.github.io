@@ -8,7 +8,7 @@
     <meta property="og:description" content="Amalgamarea voluntară vs. scenariile 2018 și propunerea finală pentru faza normativă (225 UAT). Hartă interactivă și date descărcabile.">
     <meta property="og:type" content="website">
     <title>Reforma administrativ-teritorială — amalgamarea APL 1 | AEI Digital Solutions</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="tailwind.css">
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased">
 
@@ -18,20 +18,23 @@
                 <div class="bg-indigo-600 text-white font-bold p-2 rounded-lg tracking-wider text-sm shadow-md">AEI</div>
                 <span class="font-bold text-lg tracking-tight text-white">Digital Solutions</span>
             </a>
-            <nav class="flex space-x-6 text-sm font-medium text-slate-400">
+            <nav class="flex items-center gap-x-4 text-sm font-medium text-slate-400">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded" title="Nivelul I — orașe și comune (primării)">APL 1</span>
                 <a href="harta.html" class="hover:text-indigo-400 transition">Harta interactivă</a>
                 <a href="registru.html" class="hover:text-indigo-400 transition">Registrul online</a>
                 <a href="#rezultate" class="hover:text-indigo-400 transition">Rezultate</a>
                 <a href="#metodologie" class="hover:text-indigo-400 transition">Metodologie</a>
                 <a href="#fisiere" class="hover:text-indigo-400 transition">Descărcări</a>
-                <a href="mailto:contact@aei-digitalsolutions.com" class="hover:text-indigo-400 transition">Contact</a>
+                <span class="text-slate-700">·</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-teal-300 bg-teal-500/15 px-2 py-0.5 rounded" title="Nivelul II — nivelul regional">APL 2</span>
+                <a href="regiuni.html" class="text-teal-400 hover:text-teal-300 transition">Regiunile funcționale</a>
             </nav>
         </div>
     </header>
 
     <section class="relative py-16 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950">
         <div class="max-w-4xl mx-auto px-4 text-center">
-            <span class="text-xs font-semibold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full">Cercetare aplicată · Republica Moldova · Versiunea: 18 august 2026</span>
+            <span class="text-xs font-semibold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full">Studiul APL 1 — nivelul local (orașe și comune) · Versiunea: 18 august 2026</span>
             <h1 class="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
                 Reforma administrativ-teritorială:<br class="hidden sm:block"> amalgamarea voluntară față de scenariile din 2018
             </h1>
@@ -47,6 +50,9 @@
                 </a>
                 <a href="#fisiere" class="inline-flex items-center border border-slate-700 hover:border-indigo-500/40 text-slate-300 hover:text-white font-semibold text-sm px-6 py-3 rounded-xl transition">
                     Descarcă datele și notele
+                </a>
+                <a href="regiuni.html" class="inline-flex items-center border border-teal-500/50 hover:bg-teal-500/10 text-teal-300 hover:text-white font-semibold text-sm px-6 py-3 rounded-xl transition">
+                    Studiul APL 2 — regiunile funcționale →
                 </a>
             </div>
             <p class="mt-6 text-xs text-slate-500 max-w-2xl mx-auto">
@@ -251,6 +257,14 @@
             reședința obișnuită) · Capacitatea fiscală IVPF per capita (execuție 2024). Distanțele rutiere: rețeaua OpenStreetMap.
             Analiza este un material de lucru analitic și nu reprezintă o poziție oficială. Rețeaua rutieră și geometriile administrative: OpenStreetMap/Geofabrik Moldova (04.08.2026). Propunerile au fost determinate interactiv și iterativ cu sprijinul modelelor de inteligență artificială Claude Fable 5 și OpenAI Sol 5.6 Extra High, sub coordonarea și validarea autorului. Ultima actualizare: 18 august 2026.
         </div>
+    </section>
+
+    <section class="py-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <a href="regiuni.html" class="block bg-teal-500/10 border border-teal-500/30 hover:border-teal-400 rounded-2xl p-6 transition">
+            <span class="text-xs font-semibold uppercase tracking-widest text-teal-400">Studiul APL 2 — nivelul regional</span>
+            <h3 class="text-white font-bold text-lg mt-2">Regiunile funcționale ale Republicii Moldova →</h3>
+            <p class="text-sm text-slate-400 mt-2 leading-relaxed">Pagina de față privește <span class="text-slate-200">APL 1</span> — amalgamarea orașelor și comunelor (nivelul primăriilor). Studiul conex privește <span class="text-slate-200">APL 2</span> — nivelul al doilea, astăzi raioanele: 7 regiuni funcționale provizorii pe teritoriul administrat, derivate din zone de influență urbană modelate pe rețeaua rutieră, ca reper analitic pentru viitoarele unități de nivelul II. Hartă interactivă, atlas cartografic, componența celor 904 unități consultabilă online și date GIS descărcabile.</p>
+        </a>
     </section>
 
     <footer class="border-t border-slate-800 py-8 mt-6">
