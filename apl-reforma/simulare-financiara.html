@@ -80,6 +80,18 @@ legend { font-weight: 700; font-size: 0.92rem; padding: 0 6px 0 0; }
 .prm .undo { font: inherit; font-size: 0.74rem; border: 0; background: none; color: var(--hi); cursor: pointer; padding: 0; text-decoration: underline; }
 .warn { border-left: 3px solid var(--hi); background: var(--hi-soft); padding: 6px 10px; border-radius: 0 6px 6px 0; font-size: 0.84rem; }
 .warns { display: grid; gap: 6px; }
+.pool-status { border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); padding: 9px 10px; display: grid; gap: 7px; }
+.pool-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.pool-head strong { font-size: 0.86rem; }
+.pool-head span, .pool-note, .limit { color: var(--muted); font-size: 0.76rem; }
+.pool-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.pool-item { min-width: 0; border-left: 3px solid var(--accent); padding-left: 6px; }
+.pool-item.zero { border-left-color: var(--faint); }
+.pool-item .tax-name { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 700; }
+.pool-item .pool-value { display: block; font-size: 0.86rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pool-item .pool-use { display: block; color: var(--faint); font-size: 0.7rem; }
+.pool-note { margin: 0; }
+.limit { min-height: 1.1em; }
 button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--hi); outline-offset: 2px; }
 /* results */
 .results { display: grid; gap: 16px; min-width: 0; }
@@ -200,6 +212,7 @@ code { font-family: var(--font-code); font-size: 0.82em; background: var(--code-
       <div class="ptop"><h2>Parameters</h2><button class="btn primary" id="reset" type="button" disabled="">Reset to default settings</button></div>
       <p class="note">Each setting names its dashboard cell. Changed settings are marked.</p>
       <div class="warns" id="warns"></div>
+      <section class="pool-status" id="pool-status" aria-live="polite" aria-label="Tax pools remaining after direct shares"></section>
       <div id="controls"><fieldset><legend>Direct shares</legend><p class="gnote">The share of each tax a unit keeps from what is collected on its territory. What is not kept forms the pools the funds draw from.</p>
     <div class="prm" id="p-lpa1_pit"><div class="top"><label for="n-lpa1_pit">PIT share, LPA1</label><code>C16</code></div>
       <div class="ctl"><input type="range" id="r-lpa1_pit" min="0" max="100" step="0.5" value="50" aria-label="PIT share, LPA1">
@@ -705,7 +718,10 @@ function lpfModel(units, p) {
   // pools available for redistribution (dashboard J16:K19)
   const pool = (b, dk) => (S((u) => u[b], (u) => u.l1) - S((u) => u[dk], (u) => u.l1) - S((u) => u[dk], (u) => u.reg)) +
     (S((u) => u[b], (u) => u.mun) - S((u) => u[dk], (u) => u.mun)) + (S((u) => u[b], (u) => u.uta) - S((u) => u[dk], (u) => u.uta));
-  const pitPool = pool("pit", "direct_pit"), citPool = pool("cit", "direct_cit");
+  const pitPoolRaw = pool("pit", "direct_pit"), citPoolRaw = pool("cit", "direct_cit");
+  // The UI prevents direct shares from over-allocating a tax base. These guards also keep an invalid
+  // programmatic state from creating a negative redistribution fund.
+  const pitPool = Math.max(0, pitPoolRaw), citPool = Math.max(0, citPoolRaw);
   const vatPool = S((u) => (isNum(u.vat) ? u.vat : 0), (u) => u.level === "II") - S((u) => (isNum(u.vat) ? u.vat : 0), (u) => u.uta);
   const gtf1Parts = { pit: p.gtf1_pit * pitPool, cit: p.gtf1_cit * citPool, vat: p.gtf1_vat * vatPool };
   const gtf2Parts = { pit: p.gtf2_pit * pitPool, cit: p.gtf2_cit * citPool, vat: p.gtf2_vat * vatPool };
@@ -770,7 +786,7 @@ function lpfModel(units, p) {
   }
   const mod = U.filter((u) => u.meta !== "X");
   const totals = {
-    pit_pool: pitPool, cit_pool: citPool, vat_pool: vatPool, gtf1, gtf2, pot, paid, cap_ref: capRef, threshold: thr, gtf1_parts: gtf1Parts, gtf2_parts: gtf2Parts,
+    pit_pool: pitPool, cit_pool: citPool, vat_pool: vatPool, pit_pool_raw: pitPoolRaw, cit_pool_raw: citPoolRaw, gtf1, gtf2, pot, paid, cap_ref: capRef, threshold: thr, gtf1_parts: gtf1Parts, gtf2_parts: gtf2Parts,
     new_total: sum(mod.map((u) => u.env_new)), base_total: sum(mod.map((u) => u.env_current)), comp: Math.abs(sum(mod.map((u) => u.bw))), lpa2_env: lpa2Env, lpa2_rest: lpa2Rest, task: taskB,
     topup: sum(mod.map((u) => Math.max(u.bw, 0))), held: -sum(mod.map((u) => Math.min(u.bw, 0))), n_topup: mod.filter((u) => u.bw > 100).length,
     new_lpa1: sum(L1.map((u) => u.env_new)), new_lpa2: sum(U.filter((u) => u.level === "II" && u.meta !== "X").map((u) => u.env_new)),
@@ -853,21 +869,58 @@ const toUI = (k, v) => (SPEC[k].kind === "pct" ? +(v * 100).toFixed(4) : SPEC[k]
 const fromUI = (k, x) => (SPEC[k].kind === "pct" ? x / 100 : SPEC[k].kind === "mlei" ? x * 1e6 : x);
 const fmtP = (k, v) => (SPEC[k].kind === "pct" ? nf1.format(v * 100).replace(/\.0$/, "") + "%" : SPEC[k].kind === "mlei" ? nf1.format(v / 1e6) + " M lei" : SPEC[k].kind === "num" ? nf0.format(v) + (k === "phase_years" ? " years" : "") : nf2.format(v) + "×");
 const same = (a, b) => Math.abs(a - b) < 1e-12;
+const DIRECT_REGION = { region_pit: "lpa1_pit", region_cit: "lpa1_cit" };
+const DIRECT_LPA1 = { lpa1_pit: "region_pit", lpa1_cit: "region_cit" };
+let constraintMessage = "";
+
+function enforceDirectLimit(changedKey) {
+  const l1 = DIRECT_REGION[changedKey] || (DIRECT_LPA1[changedKey] ? changedKey : null);
+  const reg = DIRECT_REGION[changedKey] ? changedKey : DIRECT_LPA1[changedKey];
+  if (!l1 || !reg) return [];
+  const maxReg = Math.max(0, 1 - cur[l1]);
+  if (cur[reg] <= maxReg + 1e-12) return [];
+  const requested = cur[reg];
+  cur[reg] = maxReg;
+  const tax = reg.endsWith("pit") ? "PIT" : "CIT";
+  constraintMessage = `The regional ${tax} share was limited to ${fmtP(reg, maxReg)} because the LPA1 and regional shares draw from the same tax base and together cannot exceed 100% (requested ${fmtP(reg, requested)}).`;
+  return [reg];
+}
+
+function refreshDirectLimits() {
+  for (const tax of ["pit", "cit"]) {
+    const l1 = `lpa1_${tax}`, reg = `region_${tax}`;
+    const max = Math.max(0, 100 - toUI(l1, cur[l1]));
+    for (const id of [`#r-${reg}`, `#n-${reg}`]) { const e = $(id); if (e) e.max = max; }
+    const note = $(`#lim-${reg}`);
+    if (note) note.textContent = `Current maximum: ${nf1.format(max).replace(/\.0$/, "")}% (100% minus the LPA1 ${tax.toUpperCase()} share).`;
+  }
+}
 
 function buildControls() {
   const groups = [...new Set(shown.map((q) => q.group))].sort((x, y) => (x === "UTAG") - (y === "UTAG"));   // UTAG last
   $("#controls").innerHTML = groups.map((g) => `<fieldset><legend>${esc(g)}</legend>${GNOTE[g] ? `<p class="gnote">${esc(GNOTE[g])}</p>` : ""}
     ${shown.filter((q) => q.group === g).map((q) => { const s = SPEC[q.key], lab = byCell[q.cell].length > 1 ? q.label.replace(/ \(.*\)$/, "") + " and VAT" : q.label;
+      const linked = !!DIRECT_REGION[q.key], described = linked ? ` aria-describedby="lim-${q.key}"` : "";
       return `<div class="prm" id="p-${q.key}"><div class="top"><label for="n-${q.key}">${esc(lab)}</label><code>${q.cell}</code></div>
-      <div class="ctl"><input type="range" id="r-${q.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${toUI(q.key, cur[q.key])}" aria-label="${esc(lab)}">
-      <input type="number" id="n-${q.key}" step="${s.step}" value="${toUI(q.key, cur[q.key])}"></div>
-      <div class="wb" id="w-${q.key}"></div></div>`; }).join("")}</fieldset>`).join("");
+      <div class="ctl"><input type="range" id="r-${q.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${toUI(q.key, cur[q.key])}" aria-label="${esc(lab)}"${described}>
+      <input type="number" id="n-${q.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${toUI(q.key, cur[q.key])}"${described}></div>
+      ${linked ? `<div class="limit" id="lim-${q.key}"></div>` : ""}<div class="wb" id="w-${q.key}"></div></div>`; }).join("")}</fieldset>`).join("");
   for (const q of shown) {
-    const set = (x) => { if (!Number.isFinite(x)) return; for (const k of byCell[q.cell]) cur[k] = fromUI(q.key, x); syncControl(q.key); update(); };
+    const set = (x) => {
+      if (!Number.isFinite(x)) return;
+      constraintMessage = "";
+      const s = SPEC[q.key], bounded = Math.max(s.min, Math.min(s.max, x));
+      for (const k of byCell[q.cell]) cur[k] = fromUI(q.key, bounded);
+      const touched = enforceDirectLimit(q.key);
+      for (const k of new Set([q.key, ...touched])) syncControl(k);
+      refreshDirectLimits();
+      update();
+    };
     $(`#r-${q.key}`).addEventListener("input", (e) => set(parseFloat(e.target.value)));
     $(`#n-${q.key}`).addEventListener("change", (e) => set(parseFloat(e.target.value)));
     syncControl(q.key);
   }
+  refreshDirectLimits();
   const fs = [...document.querySelectorAll("#controls fieldset")].find((f) => f.querySelector("legend").textContent === "Compensation");
   if (!fs) return;                                             // v7: no compensation, so no choice of what it pays
   const box = document.createElement("div"); box.className = "prm"; box.id = "p-comp_mode";
@@ -892,9 +945,16 @@ function syncControl(k) {
   $(`#p-${k}`).classList.toggle("changed", ch);
   const w = $(`#w-${k}`);
   w.innerHTML = ch ? `default ${fmtP(k, P0[k])} <button class="undo" type="button" data-undo="${k}">reset</button>` : "";
-  if (ch) w.querySelector("button").addEventListener("click", () => { for (const kk of byCell[q.cell]) cur[kk] = P0[kk]; syncControl(k); update(); });
+  if (ch) w.querySelector("button").addEventListener("click", () => {
+    constraintMessage = "";
+    for (const kk of byCell[q.cell]) cur[kk] = P0[kk];
+    const touched = enforceDirectLimit(k);
+    for (const kk of new Set([k, ...touched])) syncControl(kk);
+    refreshDirectLimits();
+    update();
+  });
 }
-$("#reset").addEventListener("click", () => { Object.assign(cur, P0); for (const q of shown) syncControl(q.key); syncMode(); update(); });
+$("#reset").addEventListener("click", () => { constraintMessage = ""; Object.assign(cur, P0); for (const q of shown) syncControl(q.key); refreshDirectLimits(); syncMode(); update(); });
 
 // ---- the model: the workbook run once, the current run on every change --------------------------------------------------
 const grp = (u) => (u.level === "I" && u.meta !== "X" ? "lpa1" : u.level === "II" && u.meta === "10" ? "regions" : u.level === "II" && u.meta === "+2" ? "mun" : null);
@@ -936,6 +996,8 @@ function drawFigs() {
 // ---- warnings: settings the workbook allows but that break a total --------------------------------------------------------
 function drawWarns() {
   const out = [], p = cur;
+  if (constraintMessage) out.push(constraintMessage);
+  if (C.t.pit_pool_raw < -0.5 || C.t.cit_pool_raw < -0.5) out.push("A direct-share combination exceeded the available tax base. The redistribution pool has been held at zero; reset the affected direct shares.");
   const k1 = p.k1_pop + p.k1_area + p.k1_cap, k2 = p.k2_pop + p.k2_area;
   if (!same(k1, 1)) out.push(`The LPA1 key weights add up to ${nf1.format(k1 * 100)}%, so ${money(Math.abs(1 - k1) * (C.t.gtf1 - C.t.pot))} of GTF1 is ${k1 < 1 ? "left undistributed" : "paid out on top of the fund"}.`);
   if (p.lpa2_fixed && C.t.gtf2 > 0.5) out.push(`The LPA2 fund is set to ${money(C.t.gtf2)}, but the regions get the fixed envelope (${money(C.t.lpa2_env)}), so that money is taken from the pools and reaches no unit.`);
@@ -944,6 +1006,20 @@ function drawWarns() {
   for (const [b, lab] of [["pit", "PIT"], ["cit", "CIT"], ["vat", "VAT"]]) { const s = p["gtf1_" + b] + p["gtf2_" + b]; if (s > 1 + 1e-12) out.push(`The two funds take ${nf1.format(s * 100)}% of the ${lab} ${b === "vat" ? "collected" : "pool"}, more than there is.`); }
   if (p.gtf1_cit + p.gtf2_cit > 0 && p.lpa1_cit + p.region_cit + p.mun_cit === 0) out.push(`The CIT pool is all CIT collected outside UTAG (${money(C.t.cit_pool)}), because no unit keeps a direct CIT share.`);
   $("#warns").innerHTML = out.map((x) => `<div class="warn">${esc(x)}</div>`).join("");
+}
+
+function drawPools() {
+  const p = cur, t = C.t;
+  const items = [
+    ["PIT", t.pit_pool, (p.gtf1_pit + p.gtf2_pit) * t.pit_pool, p.gtf1_pit + p.gtf2_pit],
+    ["CIT", t.cit_pool, (p.gtf1_cit + p.gtf2_cit) * t.cit_pool, p.gtf1_cit + p.gtf2_cit],
+    ["VAT", t.vat_pool, (p.gtf1_vat + p.gtf2_vat) * t.vat_pool, p.gtf1_vat + p.gtf2_vat],
+  ];
+  $("#pool-status").innerHTML = `<div class="pool-head"><strong>Redistribution pools</strong><span>after direct shares</span></div>
+    <div class="pool-grid">${items.map(([lab, pool, used, share]) => `<div class="pool-item${pool < 0.5 ? " zero" : ""}">
+      <span class="tax-name">${lab}</span><span class="pool-value">${money(pool)}</span>
+      <span class="pool-use">GTF: ${nf1.format(share * 100).replace(/\.0$/, "")}% · ${money(used)}</span></div>`).join("")}</div>
+    <p class="pool-note">The GTF percentages are applied to these amounts. A zero pool contributes nothing to either fund.</p>`;
 }
 
 // ---- composition (Sankey) -----------------------------------------------------------------------------------------------
@@ -1220,7 +1296,7 @@ $("#u-m").addEventListener("click", () => setUnits(false)); $("#u-l").addEventLi
 function update() {
   C = run(cur);
   $("#reset").disabled = shown.every((q) => same(cur[q.key], P0[q.key])) && cur.comp_mode === P0.comp_mode;
-  drawWarns(); drawGuide(); drawFigs(); drawFlow(); drawGroups(); drawMap(); drawDist(); drawUnits(); drawDetail(); drawNotes();
+  drawWarns(); drawPools(); drawGuide(); drawFigs(); drawFlow(); drawGroups(); drawMap(); drawDist(); drawUnits(); drawDetail(); drawNotes();
 }
 { const m = INP.workbook.match(/ v([0-9]+[a-z]?)\.xlsx$/); if (m) $("#wbver").textContent = "version " + m[1]; }
 $("#footer").textContent = `Data: ${INP.workbook}. Generated ${INP.generated || ""}.`;
