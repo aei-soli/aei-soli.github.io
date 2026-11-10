@@ -105,6 +105,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focu
 .fig .cmp b { font-weight: 600; }
 .fig.moved { border-color: var(--hi); }
 .up { color: var(--win); } .down { color: var(--loss); }
+.envelope-card { border-color: var(--hi); background: linear-gradient(135deg, var(--surface) 0%, var(--hi-soft) 160%); }
+.envelope-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.envelope-head h2 { margin-bottom: 4px; }
+.envelope-pill { flex: 0 0 auto; border: 1px solid var(--hi); border-radius: 999px; padding: 5px 9px; background: var(--surface); color: var(--fg); font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.envelope-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.envelope-metric { min-width: 0; border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; background: var(--surface); }
+.envelope-metric span { display: block; color: var(--muted); font-size: 0.78rem; }
+.envelope-metric b { display: block; margin-top: 2px; font-size: 1.35rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.envelope-scale { margin-top: 15px; }
+.envelope-track { position: relative; height: 12px; border: 1px solid var(--rule); border-radius: 999px; background: linear-gradient(90deg, var(--loss) 0%, var(--pivot) 32%, var(--win) 50%, var(--pivot) 68%, var(--loss) 100%); }
+.envelope-track::after { content: ""; position: absolute; top: -5px; bottom: -5px; left: 50%; width: 2px; transform: translateX(-1px); background: var(--fg); }
+.envelope-marker { position: absolute; top: 50%; width: 18px; height: 18px; transform: translate(-50%, -50%); border: 3px solid var(--surface); border-radius: 50%; background: var(--fg); box-shadow: 0 0 0 1px var(--fg); z-index: 1; }
+.envelope-labels { display: flex; justify-content: space-between; margin-top: 5px; color: var(--muted); font-size: 0.72rem; }
+.envelope-foot { margin: 12px 0 0; color: var(--muted); font-size: 0.82rem; }
+@media (max-width: 760px) {
+  .envelope-head { display: grid; }
+  .envelope-pill { justify-self: start; }
+  .envelope-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .scroll { overflow-x: auto; }
 svg { display: block; }
 svg.dia { width: 100%; height: auto; min-width: 720px; }
@@ -309,6 +328,19 @@ code { font-family: var(--font-code); font-size: 0.82em; background: var(--code-
       <div class="wb" id="w-utag_cit"></div></div></fieldset></div>
     </aside>
     <main class="results">
+      <section class="card envelope-card" aria-labelledby="envelope-h">
+        <div class="envelope-head">
+          <div><h2 id="envelope-h">Fiscal envelope constraint</h2>
+            <p class="note">The comparable total going to the local government system, outside UTAG. The policy aim is to keep the simulated envelope as close as possible to the current system: an ideal difference of zero.</p></div>
+          <span class="envelope-pill" id="envelope-distance">Distance from balance: 0.07%</span>
+        </div>
+        <div class="envelope-grid" id="envelope-summary"><div class="envelope-metric"><span>Current system, 2025</span><b>8,418.0 M</b></div><div class="envelope-metric"><span>Simulated full model</span><b>8,423.8 M</b></div><div class="envelope-metric"><span>Added to the local system</span><b class="up">+5.8 M</b></div><div class="envelope-metric"><span>Change from current</span><b class="up">+0.07%</b></div></div>
+        <div class="envelope-scale">
+          <div class="envelope-track" role="meter" aria-label="Difference between simulated and current fiscal envelope" aria-valuemin="-2" aria-valuemax="2" aria-valuenow="0.07" aria-valuetext="+0.07% compared with the current fiscal envelope"><span class="envelope-marker" id="envelope-marker" style="left:51.7%"></span></div>
+          <div class="envelope-labels"><span>−2%</span><span>ideal balance: 0%</span><span>+2%</span></div>
+        </div>
+        <p class="envelope-foot" id="envelope-foot">Year 1 would be <b>8,419.5 M</b>, <b>+1.5 M</b> (+0.02%) compared with the current envelope. The ±2% scale is a visual aid, not a legal tolerance. Workbook: dashboard J7, L7, F75 and N7.</p>
+      </section>
       <div class="figs" id="figs"><div class="fig"><span class="lab">New model, outside UTAG</span><span class="val">8,423.8 M</span>
     <span class="cmp">same as default settings</span></div><div class="fig"><span class="lab">LPA1 units, against the 2025 baseline 4,383.5 M</span><span class="val up">+10.9 M</span><span class="cmp">+0.2%</span></div><div class="fig"><span class="lab">Level II units, against the 2025 baseline 4,034.5 M</span><span class="val down">−5.1 M</span><span class="cmp">−0.1%</span></div><div class="fig"><span class="lab">Year-1 top-ups, 97 units</span><span class="val">327.7 M</span>
     <span class="cmp">same as default settings</span></div><div class="fig"><span class="lab">Year-1 gains held back</span><span class="val">332.0 M</span>
@@ -660,6 +692,7 @@ code { font-family: var(--font-code); font-size: 0.82em; background: var(--code-
       <dt>GTF1, GTF2</dt><dd>The two equalisation funds (general transfer funds) of the proposed model: GTF1 for LPA1 units and Taraclia, GTF2 for the regions (not used: the regions get a fixed envelope).</dd>
       <dt>Equalisation key</dt><dd>Each unit's share of a fund, a weighted mix of its shares of population, area and (for LPA1) the fiscal-capacity gap.</dd>
       <dt>Fiscal capacity</dt><dd>PIT collected per inhabitant. The gap is how far a unit is below the multiplier × the LPA1 average; units above it have no gap. A unit's share of the capacity part is its gap × its population, over the sum of gap × population.</dd>
+      <dt>Fiscal envelope</dt><dd>The comparable total going to the local government system, outside UTAG: shared state taxes plus the general equalisation or compensation transfer, after the model's competence shifts. Unchanged road tax, LP293 transfers, earmarked transfers and own revenues are excluded from both the current and simulated envelopes.</dd>
       <dt>Baseline (AA)</dt><dd>What each unit received in 2025 under today's law, summed to the new map: tax shares + equalisation transfer + compensation transfers − education + culture institutions moved (Z).</dd>
       <dt>Phase-in</dt><dd>The transition of the new model concept: each unit gets its baseline plus one step of its change per year until the full model. CA is the year-1 adjustment: a top-up for units that lose, a part of the gain held back for units that gain (dashboard F49, F52).</dd>
       <dt>Amount in year 1</dt><dd>What a unit receives in the first year: the new model + the year-1 adjustment (workbook column CB).</dd>
@@ -993,6 +1026,27 @@ function drawFigs() {
   ].join("");
 }
 
+function drawEnvelope() {
+  const t = C.t, current = t.base_total, simulated = t.new_total, diff = simulated - current;
+  const ratio = current ? diff / current : 0, pctValue = ratio * 100;
+  const year1 = V7 ? simulated + t.topup - t.held : simulated + Math.abs(t.comp);
+  const year1Diff = year1 - current;
+  const action = diff > 0.5 ? "Added to the local system" : diff < -0.5 ? "Removed from the local system" : "Envelope difference";
+  const marker = Math.max(0, Math.min(100, 50 + (pctValue / 2) * 50));
+  $("#envelope-summary").innerHTML = [
+    ["Current system, 2025", M(current), ""],
+    ["Simulated full model", M(simulated), ""],
+    [action, sgnM(diff), diff >= 0 ? "up" : "down"],
+    ["Change from current", pct(ratio, 2), diff >= 0 ? "up" : "down"],
+  ].map(([lab, val, cls]) => `<div class="envelope-metric"><span>${esc(lab)}</span><b class="${cls}">${val}</b></div>`).join("");
+  $("#envelope-distance").textContent = `Distance from balance: ${nf2.format(Math.abs(pctValue))}%`;
+  const track = $(".envelope-track"), markerEl = $("#envelope-marker");
+  markerEl.style.left = `${marker}%`;
+  track.setAttribute("aria-valuenow", nf2.format(pctValue));
+  track.setAttribute("aria-valuetext", `${pct(ratio, 2)} compared with the current fiscal envelope`);
+  $("#envelope-foot").innerHTML = `Year 1 would be <b>${M(year1)}</b>, <b class="${year1Diff >= 0 ? "up" : "down"}">${sgnM(year1Diff)}</b> (${pct(year1Diff / current, 2)}) compared with the current envelope. The ±2% scale is a visual aid, not a legal tolerance. Workbook: dashboard J7, L7, F75 and N7.`;
+}
+
 // ---- warnings: settings the workbook allows but that break a total --------------------------------------------------------
 function drawWarns() {
   const out = [], p = cur;
@@ -1252,7 +1306,7 @@ function drawGuide() {
       ? `${P("inc_pot")} of GTF1 (${money(t.pot)}) is set aside for LPA1 units that collect more own revenue (local taxes and the property tax) relative to their PIT than ${fmtP("inc_threshold", cur.inc_threshold)} the average. A first round shares it by effort; a second round shares what is left by each unit's room under its cap of ${P("inc_cap")} of own revenues, so no unit goes above the cap. ${money(t.paid)} is paid to ${C.U.filter((u) => u.l1 && u.grant > 0).length} units${t.pot - t.paid >= 1 ? `; the ${money(t.pot - t.paid)} the caps leave unpaid stays in the LPA1 fund` : ""}.`
       : `${P("inc_pot")} of GTF1 (${money(t.pot)}) is taken out of the fund and paid to LPA1 units that collect more own revenue (local taxes and the property tax) relative to their PIT than ${fmtP("inc_threshold", cur.inc_threshold)} the average, each capped at ${P("inc_cap")} of its own revenues.`],
     ["Equalisation", `The rest of GTF1 (${money(t.gtf1 - t.paid)}) is split between the ${nL1} LPA1 units${V7 ? " and Taraclia" : ""} by a key: ${P("k1_pop")} their share of the population, ${P("k1_area")} their share of the area, ${P("k1_cap")} their share of the fiscal-capacity gap, meaning how far their PIT per head falls below ${fmtP("cap_mult", cur.cap_mult)} the average${P0.v6a ? ", times their population (so the gap counts per inhabitant, not per unit)" : ""}. ${cur.lpa2_fixed ? `The three regions get their share of the fixed envelope, for now their own 2025 baseline after the culture transfer. Taraclia also keeps its PIT share; Chișinău and Bălți get their direct shares only.` : `GTF2 is split between the three regions by population (${P("k2_pop")}) and area (${P("k2_area")}). Chișinău, Bălți and Taraclia receive no equalisation, only their direct shares.`}`],
-    ["New total", `For each unit: direct shares + equalisation + incentive grant. Outside UTAG: ${money(t.new_total)}.`],
+    ["Fiscal envelope", `For each unit: direct shares + equalisation + incentive grant. Outside UTAG, the current system is ${money(t.base_total)} and the simulated full model is ${money(t.new_total)}: ${money(t.new_total - t.base_total)} (${pct(t.new_total / t.base_total - 1, 2)}) ${t.new_total >= t.base_total ? "more" : "less"}. The policy aim is to keep this difference as close to zero as possible.`],
     ["Compared with 2025", `The 2025 baseline is what each unit actually received in 2025 under today's law: its shares of state taxes, its equalisation transfer and any compensation transfer${V7 ? `, with the culture institutions that move from the regions to level I units (${money(sumU(C, (u) => Math.max(u.culture || 0, 0)))}) taken off the regions' baseline and added to the towns that take them over` : ""} (${money(t.base_total)} in all). A unit gains if its new total is above its baseline.`],
     ...(V7 ? [["Phase-in", `Every unit outside UTAG moves to the model over ${P("phase_years")}: in year 1 it gets its baseline plus ${nf0.format(100 / cur.phase_years)} in a hundred of its change, then one more step each year. In year 1 the ${t.n_topup} units that lose get top-ups of ${money(t.topup)} from the state budget, and the units that gain wait for ${money(t.held)} of their gains: net ${money(t.topup - t.held)} for the state budget.`]] : []),
     ...(V7 ? [] : [["Compensation", `A unit whose new total is more than ${fmtP("comp_threshold", Math.abs(cur.comp_threshold))} below its baseline receives, from the state budget, ${P("comp_rate")} of ${cur.comp_mode === "excess" ? "the part of its loss beyond that threshold" : "its whole loss"}: ${money(t.comp)} for ${t.n_comp} units. Compensation is paid on top of the new total and is not part of it.`]]),
@@ -1285,6 +1339,7 @@ function drawNotes() {
       <dt>GTF1, GTF2</dt><dd>The two equalisation funds (general transfer funds) of the proposed model: GTF1 for LPA1 units${V7 ? " and Taraclia" : ""}, GTF2 for the regions${INP.lpa2_fixed ? " (not used: the regions get a fixed envelope)" : ""}.</dd>
       <dt>Equalisation key</dt><dd>Each unit's share of a fund, a weighted mix of its shares of population, area and (for LPA1) the fiscal-capacity gap.</dd>
       <dt>Fiscal capacity</dt><dd>PIT collected per inhabitant. The gap is how far a unit is below the multiplier × the LPA1 average; units above it have no gap.${P0.v6a ? " A unit's share of the capacity part is its gap × its population, over the sum of gap × population." : ""}</dd>
+      <dt>Fiscal envelope</dt><dd>The comparable total going to the local government system, outside UTAG: shared state taxes plus the general equalisation or compensation transfer, after the model's competence shifts. Unchanged road tax, LP293 transfers, earmarked transfers and own revenues are excluded from both the current and simulated envelopes.</dd>
       <dt>Baseline (${Lt("Z")})</dt><dd>What each unit received in 2025 under today's law, summed to the new map: tax shares + equalisation transfer + compensation transfers − education${V7 ? " + culture institutions moved (Z)" : ""}.</dd>
       ${V7 ? `<dt>Phase-in</dt><dd>The transition of the new model concept: each unit gets its baseline plus one step of its change per year until the full model. ${Lt("BZ")} is the year-1 adjustment: a top-up for units that lose, a part of the gain held back for units that gain (dashboard F49, F52).</dd>
       <dt>Amount in year 1</dt><dd>What a unit receives in the first year: the new model + the year-1 adjustment (workbook column ${Lt("CA")}).</dd>` : `<dt>Compensation</dt><dd>A transfer from the state budget for units that lose more than the threshold; it is not part of the model's total.</dd>
@@ -1302,7 +1357,7 @@ $("#u-m").addEventListener("click", () => setUnits(false)); $("#u-l").addEventLi
 function update() {
   C = run(cur);
   $("#reset").disabled = shown.every((q) => same(cur[q.key], P0[q.key])) && cur.comp_mode === P0.comp_mode;
-  drawWarns(); drawPools(); drawGuide(); drawFigs(); drawFlow(); drawGroups(); drawMap(); drawDist(); drawUnits(); drawDetail(); drawNotes();
+  drawWarns(); drawPools(); drawGuide(); drawEnvelope(); drawFigs(); drawFlow(); drawGroups(); drawMap(); drawDist(); drawUnits(); drawDetail(); drawNotes();
 }
 { const m = INP.workbook.match(/ v([0-9]+[a-z]?)\.xlsx$/); if (m) $("#wbver").textContent = "version " + m[1]; }
 $("#footer").textContent = `Data: ${INP.workbook}. Generated ${INP.generated || ""}.`;
