@@ -71,6 +71,7 @@ legend { font-weight: 700; font-size: 0.92rem; padding: 0 6px 0 0; }
 .prm .ctl { display: grid; grid-template-columns: minmax(0, 1fr) 5.2rem; gap: 8px; align-items: center; }
 .prm input[type="range"] { width: 100%; accent-color: var(--accent); }
 .prm input[type="number"] { font: inherit; font-size: 0.86rem; width: 100%; padding: 2px 6px; border: 1px solid var(--rule-strong); border-radius: 5px; background: var(--surface); color: var(--fg); text-align: right; font-variant-numeric: tabular-nums; }
+.prm input:disabled { opacity: 0.7; cursor: not-allowed; }
 .prm .wb { font-size: 0.76rem; color: var(--faint); display: flex; gap: 8px; align-items: center; min-height: 1.2em; }
 .prm.changed label { font-weight: 700; color: var(--hi); }
 .prm.changed input[type="number"] { border-color: var(--hi); }
@@ -856,7 +857,7 @@ const SPEC = {
   mun_pit: { kind: "pct", min: 0, max: 100, step: 0.5 }, mun_cit: { kind: "pct", min: 0, max: 100, step: 0.5 },
   gtf1_pit: { kind: "pct", min: 0, max: 100, step: 0.5 }, gtf1_cit: { kind: "pct", min: 0, max: 100, step: 0.5 }, gtf1_vat: { kind: "pct", min: 0, max: 100, step: 0.5 },
   gtf2_pit: { kind: "pct", min: 0, max: 100, step: 0.5 }, gtf2_cit: { kind: "pct", min: 0, max: 100, step: 0.5 }, gtf2_vat: { kind: "pct", min: 0, max: 100, step: 0.5 },
-  k1_pop: { kind: "pct", min: 0, max: 100, step: 1 }, k1_area: { kind: "pct", min: 0, max: 100, step: 1 }, k1_cap: { kind: "pct", min: 0, max: 100, step: 1 },
+  k1_pop: { kind: "pct", min: 0, max: 85, step: 1 }, k1_area: { kind: "pct", min: 0, max: 85, step: 1 }, k1_cap: { kind: "pct", min: 15, max: 100, step: 1 },
   cap_mult: { kind: "mult", min: 0.5, max: 3, step: 0.05 },
   k2_pop: { kind: "pct", min: 0, max: 100, step: 1 }, k2_area: { kind: "pct", min: 0, max: 100, step: 1 },
   inc_pot: { kind: "pct", min: 0, max: 20, step: 0.1 }, inc_threshold: { kind: "mult", min: 0.5, max: 2, step: 0.05 }, inc_cap: { kind: "pct", min: 0, max: 100, step: 1 },
@@ -871,8 +872,8 @@ const GNOTE = {
   "Direct shares": "The share of each tax a unit keeps from what is collected on its territory. What is not kept forms the pools the funds draw from.",
   "LPA1 fund (GTF1)": "The share of each pool that goes into the LPA1 equalisation fund.",
   "LPA2 fund (GTF2)": "The share of each pool that goes into the fund for the three regions.",
-  "LPA1 equalisation key": "How GTF1, after the incentive grant, is split between LPA1 units. The capacity gap is measured against the multiplier × the average PIT per head.",
-  "LPA2 equalisation key": "How GTF2 is split between the three regions.",
+  "LPA1 equalisation key": "The three weights always total 100%. Population and area are editable; fiscal capacity is the remainder and cannot fall below 15%. Once that floor is reached, increasing population reduces area, or increasing area reduces population. The capacity gap is measured against the multiplier × the average PIT per head.",
+  "LPA2 equalisation key": "The two weights always total 100%. Population is editable and area is calculated automatically as 100% minus population.",
   "Incentive grant": "Paid out of GTF1 to LPA1 units whose own revenues are above the threshold × the average effort.",
   "Compensation": "Paid from the state budget, outside the funds, to units whose change against the 2025 baseline is below the threshold. The workbook pays the rate × the whole loss, so a unit just past the threshold ends up better off than one just short of it.",
   "UTAG": "UTAG is outside the comparison. What it does not keep is added to the pools.",
@@ -885,7 +886,7 @@ const V7 = INP.transition === "phase";
 const Lt = (k) => { if (!V7) return k; let i = [...k].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0); if (i < 26) return k; i += 1; let s = ""; while (i > 0) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; };
 if (V7 && INP.lpa2_fixed) {
   GNOTE["LPA2 fund (GTF2)"] = "Not used: the regions get a fixed envelope instead (dashboard J30). If you set these, the money is taken from the pools but reaches no unit.";
-  GNOTE["LPA2 equalisation key"] = "Not used while the regions are on the fixed envelope.";
+  GNOTE["LPA2 equalisation key"] = "Not used while the regions are on the fixed envelope. The two displayed weights nevertheless remain exact complements and total 100%.";
 }
 const adj = (u) => (V7 ? (u.bw || 0) : Math.abs(u.bw || 0));      // year-1 phase-in adjustment (signed), or compensation
 const COMPL = V7 ? "Phase-in, year 1" : "Compensation", TOTL = V7 ? "Amount in year 1" : "Total with compensation", AFTL = V7 ? "Change in year 1" : "Change after compensation";
@@ -904,6 +905,7 @@ const fmtP = (k, v) => (SPEC[k].kind === "pct" ? nf1.format(v * 100).replace(/\.
 const same = (a, b) => Math.abs(a - b) < 1e-12;
 const DIRECT_REGION = { region_pit: "lpa1_pit", region_cit: "lpa1_cit" };
 const DIRECT_LPA1 = { lpa1_pit: "region_pit", lpa1_cit: "region_cit" };
+const COMPUTED_KEY = new Set(["k1_cap", "k2_area"]);
 let constraintMessage = "";
 
 function enforceDirectLimit(changedKey) {
@@ -929,24 +931,52 @@ function refreshDirectLimits() {
   }
 }
 
+function enforceEqualisationKey(changedKey) {
+  const touched = [];
+  if (changedKey === "k1_pop" || changedKey === "k1_area") {
+    const other = changedKey === "k1_pop" ? "k1_area" : "k1_pop";
+    const available = 0.85;
+    if (cur[changedKey] + cur[other] > available + 1e-12) {
+      cur[other] = Math.max(0, available - cur[changedKey]);
+      touched.push(other);
+      const changedLabel = changedKey === "k1_pop" ? "population" : "area";
+      const otherLabel = other === "k1_pop" ? "population" : "area";
+      constraintMessage = `The LPA1 ${otherLabel} weight was adjusted to ${fmtP(other, cur[other])} when ${changedLabel} increased, keeping fiscal capacity at its 15% minimum and the three weights at 100%.`;
+    }
+    cur.k1_cap = 1 - cur.k1_pop - cur.k1_area;
+    touched.push("k1_cap");
+  } else if (changedKey === "k2_pop") {
+    cur.k2_area = 1 - cur.k2_pop;
+    touched.push("k2_area");
+  }
+  return touched;
+}
+
+function refreshKeyLimits() {
+  const k1 = $("#lim-k1_cap"), k2 = $("#lim-k2_area");
+  if (k1) k1.textContent = "Calculated automatically: 100% − population − area; minimum 15%.";
+  if (k2) k2.textContent = "Calculated automatically: 100% − population.";
+}
+
 function buildControls() {
   const groups = [...new Set(shown.map((q) => q.group))].sort((x, y) => (x === "UTAG") - (y === "UTAG"));   // UTAG last
   $("#controls").innerHTML = groups.map((g) => `<fieldset><legend>${esc(g)}</legend>${GNOTE[g] ? `<p class="gnote">${esc(GNOTE[g])}</p>` : ""}
     ${shown.filter((q) => q.group === g).map((q) => { const s = SPEC[q.key], lab = byCell[q.cell].length > 1 ? q.label.replace(/ \(.*\)$/, "") + " and VAT" : q.label;
-      const linked = !!DIRECT_REGION[q.key], described = linked ? ` aria-describedby="lim-${q.key}"` : "";
+      const linked = !!DIRECT_REGION[q.key], computed = COMPUTED_KEY.has(q.key), described = linked || computed ? ` aria-describedby="lim-${q.key}"` : "", disabled = computed ? " disabled" : "";
       return `<div class="prm" id="p-${q.key}"><div class="top"><label for="n-${q.key}">${esc(lab)}</label><code>${q.cell}</code></div>
-      <div class="ctl"><input type="range" id="r-${q.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${toUI(q.key, cur[q.key])}" aria-label="${esc(lab)}"${described}>
-      <input type="number" id="n-${q.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${toUI(q.key, cur[q.key])}"${described}></div>
-      ${linked ? `<div class="limit" id="lim-${q.key}"></div>` : ""}<div class="wb" id="w-${q.key}"></div></div>`; }).join("")}</fieldset>`).join("");
+      <div class="ctl"><input type="range" id="r-${q.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${toUI(q.key, cur[q.key])}" aria-label="${esc(lab)}"${described}${disabled}>
+      <input type="number" id="n-${q.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${toUI(q.key, cur[q.key])}"${described}${disabled}></div>
+      ${linked || computed ? `<div class="limit" id="lim-${q.key}"></div>` : ""}<div class="wb" id="w-${q.key}"></div></div>`; }).join("")}</fieldset>`).join("");
   for (const q of shown) {
     const set = (x) => {
       if (!Number.isFinite(x)) return;
       constraintMessage = "";
       const s = SPEC[q.key], bounded = Math.max(s.min, Math.min(s.max, x));
       for (const k of byCell[q.cell]) cur[k] = fromUI(q.key, bounded);
-      const touched = enforceDirectLimit(q.key);
+      const touched = [...enforceDirectLimit(q.key), ...enforceEqualisationKey(q.key)];
       for (const k of new Set([q.key, ...touched])) syncControl(k);
       refreshDirectLimits();
+      refreshKeyLimits();
       update();
     };
     $(`#r-${q.key}`).addEventListener("input", (e) => set(parseFloat(e.target.value)));
@@ -954,6 +984,7 @@ function buildControls() {
     syncControl(q.key);
   }
   refreshDirectLimits();
+  refreshKeyLimits();
   const fs = [...document.querySelectorAll("#controls fieldset")].find((f) => f.querySelector("legend").textContent === "Compensation");
   if (!fs) return;                                             // v7: no compensation, so no choice of what it pays
   const box = document.createElement("div"); box.className = "prm"; box.id = "p-comp_mode";
@@ -977,17 +1008,22 @@ function syncControl(k) {
   $(`#r-${k}`).value = toUI(k, cur[k]); $(`#n-${k}`).value = toUI(k, cur[k]);
   $(`#p-${k}`).classList.toggle("changed", ch);
   const w = $(`#w-${k}`);
+  if (COMPUTED_KEY.has(k)) {
+    w.textContent = ch ? `default ${fmtP(k, P0[k])}` : "";
+    return;
+  }
   w.innerHTML = ch ? `default ${fmtP(k, P0[k])} <button class="undo" type="button" data-undo="${k}">reset</button>` : "";
   if (ch) w.querySelector("button").addEventListener("click", () => {
     constraintMessage = "";
     for (const kk of byCell[q.cell]) cur[kk] = P0[kk];
-    const touched = enforceDirectLimit(k);
+    const touched = [...enforceDirectLimit(k), ...enforceEqualisationKey(k)];
     for (const kk of new Set([k, ...touched])) syncControl(kk);
     refreshDirectLimits();
+    refreshKeyLimits();
     update();
   });
 }
-$("#reset").addEventListener("click", () => { constraintMessage = ""; Object.assign(cur, P0); for (const q of shown) syncControl(q.key); refreshDirectLimits(); syncMode(); update(); });
+$("#reset").addEventListener("click", () => { constraintMessage = ""; Object.assign(cur, P0); for (const q of shown) syncControl(q.key); refreshDirectLimits(); refreshKeyLimits(); syncMode(); update(); });
 
 // ---- the model: the workbook run once, the current run on every change --------------------------------------------------
 const grp = (u) => (u.level === "I" && u.meta !== "X" ? "lpa1" : u.level === "II" && u.meta === "10" ? "regions" : u.level === "II" && u.meta === "+2" ? "mun" : null);
