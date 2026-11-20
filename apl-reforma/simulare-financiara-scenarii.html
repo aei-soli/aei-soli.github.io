@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html lang="ro"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Interactive comparison of three personal income tax retention scenarios for Moldova's local public finance system, with fiscal-envelope, money-flow and mapped results.">
-<meta property="og:title" content="Three PIT retention scenarios | AEI Digital Solutions">
-<meta property="og:description" content="Compare three local public finance scenarios and adjust PIT, VAT, equalisation and regional-grant parameters interactively.">
+<meta name="description" content="Simulator interactiv bilingv al scenariilor de finanțe publice locale din Republica Moldova, cu rezultate fiscale, fluxuri și hartă.">
+<meta property="og:title" content="Simulatorul financiar LPF | AEI Digital Solutions">
+<meta property="og:description" content="Comparați trei scenarii și ajustați interactiv parametrii FSF, IVPF, TVA și ai echilibrării.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://aei-digitalsolutions.com/apl-reforma/simulare-financiara-scenarii.html">
 <link rel="canonical" href="https://aei-digitalsolutions.com/apl-reforma/simulare-financiara-scenarii.html">
-<title>Three PIT retention scenarios | AEI Digital Solutions</title>
+<title>Simulatorul financiar LPF | AEI Digital Solutions</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 html { color-scheme: light dark; } body { margin: 0; }
@@ -151,6 +151,8 @@ table.t tbody tr.on td { background: var(--hi-soft); }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.82rem; color: var(--muted); }
 .legend span::before { content: ""; display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); border: 1.5px solid var(--b, transparent); }
 .footer { color: var(--faint); font-size: 0.8rem; margin: 0; }
+.header-tools { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; margin-left: auto; }
+.language-toggle { min-width: 3rem; border-color: var(--accent); color: var(--accent); font-weight: 800; }
 .unitsw { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; margin-top: 0; }
 .unitsw .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .guide { gap: 0; padding-block: 10px; }
@@ -236,6 +238,28 @@ code { font-family: var(--font-code); font-size: 0.82em; background: var(--code-
 .map-legend span { display: inline-flex; gap: 5px; align-items: center; }
 .map-legend i { width: 13px; height: 13px; border: 1px solid var(--rule-strong); border-radius: 2px; display: inline-block; }
 
+.allocation-card > summary { display:flex; justify-content:space-between; align-items:center; gap:12px; cursor:pointer; font-weight:800; list-style:none; }
+.allocation-card > summary::-webkit-details-marker { display:none; }
+.allocation-card > summary::after { content:"▾"; color:var(--accent); transition:transform .2s ease; }
+.allocation-card[open] > summary::after { transform:rotate(180deg); }
+.allocation-card .summary-hint { color:var(--muted); font-size:.78rem; font-weight:600; margin-left:auto; }
+.allocation-card { min-width:0; max-width:100%; overflow:hidden; }
+.allocation-card .allocation-note { margin:10px 0; }
+.allocation-card .scroll { min-width:0; max-width:100%; overflow-x:hidden; }
+table.t th { white-space:normal; overflow-wrap:anywhere; hyphens:auto; line-height:1.15; vertical-align:bottom; }
+table.t.allocation-table { width:100%; table-layout:fixed; }
+table.t.allocation-table th, table.t.allocation-table td { white-space:normal; overflow-wrap:anywhere; font-size:.72rem; line-height:1.18; padding:7px 5px; }
+table.t.allocation-table th { position:sticky; top:0; z-index:1; text-align:center; }
+.allocation-table td:nth-child(n+3) { text-align:right; font-variant-numeric:tabular-nums; }
+.allocation-table tr.neutral { background:color-mix(in srgb, var(--accent-soft) 65%, white); }
+.allocation-table tr.optimized { background:color-mix(in srgb, var(--surface-2) 70%, white); }
+#groups { width:100%; table-layout:fixed; }
+#groups th, #groups td { white-space:normal; overflow-wrap:anywhere; line-height:1.18; }
+#groups th:first-child, #groups td:first-child { width:17%; }
+#sk { overflow:visible; }
+.notes dl { grid-template-columns: 11.5rem minmax(0, 1fr); column-gap:10px; }
+.notes dt { white-space:normal; line-height:1.25; }
+@media (max-width: 1100px) { .notes dl { grid-template-columns: 10.5rem minmax(0, 1fr); } }
 </style>
 
 </head>
@@ -253,7 +277,7 @@ code { font-family: var(--font-code); font-size: 0.82em; background: var(--code-
   <header>
     <div class="header-top">
       <h1>Moldova local public finance scenarios</h1>
-      <div class="unitsw" role="group" aria-label="Show amounts in"><span class="note">Amounts in</span><button type="button" class="btn" id="u-m" aria-pressed="true">million lei</button><button type="button" class="btn" id="u-l" aria-pressed="false">lei</button></div>
+      <div class="header-tools"><button type="button" class="btn language-toggle" id="language-toggle" aria-label="Switch to English">EN</button><div class="unitsw" role="group" aria-label="Show amounts in"><span class="note">Amounts in</span><button type="button" class="btn" id="u-m" aria-pressed="true">million lei</button><button type="button" class="btn" id="u-l" aria-pressed="false">lei</button></div></div>
     </div>
     <p class="sub">Three PIT-retention scenarios applied to the 2025 data and the new administrative map. Select a scenario and then choose either its fiscal-neutral version or its recommended optimized fund composition. “Scenario preset” is the selected combination before your subsequent changes.</p>
   </header>
@@ -401,6 +425,14 @@ code { font-family: var(--font-code); font-size: 0.82em; background: var(--code-
     <p>to local budgets 0.0 M lei (0.0%)</p><p>stays with the state budget 9,547.2 M lei</p></div><div class="tax"><h3>VAT collected 2025, outside UTAG <code>E7</code></h3><span class="amt">14,985.4 M lei</span>
     <p>to local budgets 1,348.7 M lei (9.0%)</p><p>stays with the state budget 13,636.7 M lei</p></div></div>
       </section>
+      <details class="card allocation-card" id="allocation-analysis" open>
+        <summary><span id="allocation-title">National tax allocation and GTF headroom by scenario</span><span class="summary-hint" id="allocation-hint">Show / hide the six-scenario estimate</span></summary>
+        <p class="note allocation-note" id="allocation-note">Base: national PIT + CIT + VAT, including UTA Gagauzia.</p>
+        <h3 id="allocation-source-heading">Unallocated share of each tax source</h3>
+        <div class="scroll"><table class="t allocation-table" id="allocation-source-table"></table></div>
+        <h3 id="allocation-category-heading">Allocations already committed by recipient category</h3>
+        <div class="scroll"><table class="t allocation-table" id="allocation-table"></table></div>
+      </details>
       <section class="card">
         <h2>Envelope by recipient group</h2><p class="note">Regional grants are displayed for fiscal-envelope accounting; the old-versus-new Level II difference is not a policy performance comparison.</p>
         <div class="scroll"><table class="t" id="groups"></table></div>
@@ -556,14 +588,19 @@ function lpfModel(units, p) {
   const pitPool = pool("pit", "direct_pit"), citPool = pool("cit", "direct_cit");
   const vatPool = S((u) => (isNum(u.vat) ? u.vat : 0), (u) => u.level === "II") - S((u) => (isNum(u.vat) ? u.vat : 0), (u) => u.uta);
   const regionBaseline = S((u) => u.env_current, (u) => u.reg);
-  const level2Envelope = p.l2_total;
+  const nationalPitBase = INP.bases.pit + S((u) => u.pit_base, (u) => u.uta);
+  const salaryImpactNational = p.salary_policy ? S((u) => Number(u.salary_impact || 0), (u) => u.l1 || u.mun) : 0;
+  const nationalPit = nationalPitBase + salaryImpactNational;
+  const nationalCit = INP.bases.cit + S((u) => u.cit, (u) => u.uta);
+  const nationalVat = INP.bases.vat + S((u) => (isNum(u.vat) ? u.vat : 0), (u) => u.uta);
+  const level2Envelope = p.lpa2_fixed ? p.l2_total : 0;
   const operationTotal = level2Envelope * p.l2_operating_share;
   const developmentFund = level2Envelope - operationTotal;
   const opNord = operationTotal * p.op_north_share, opCentru = operationTotal * p.op_centre_share, opSud = operationTotal * p.op_south_share;
   const releasedL2 = Math.max(0, regionBaseline - level2Envelope);
-  const pitForGtf1 = Math.max(0, pitPool - level2Envelope);
-  const gtf1Parts = { pit: p.gtf1_pit * pitForGtf1, cit: p.gtf1_cit * citPool, vat: p.gtf1_vat * vatPool };
-  const gtf2Parts = { pit: p.gtf2_pit * pitPool, cit: p.gtf2_cit * citPool, vat: p.gtf2_vat * vatPool };
+  const pitForGtf1 = nationalPit;
+  const gtf1Parts = { pit: p.gtf1_pit * nationalPit, cit: p.gtf1_cit * nationalCit, vat: p.gtf1_vat * nationalVat };
+  const gtf2Parts = { pit: p.gtf2_pit * nationalPit, cit: p.gtf2_cit * nationalCit, vat: p.gtf2_vat * nationalVat };
   const gtf1 = gtf1Parts.pit + gtf1Parts.cit + gtf1Parts.vat, gtf2 = gtf2Parts.pit + gtf2Parts.cit + gtf2Parts.vat;
   const pot = gtf1 * p.inc_pot;
   // fiscal capacity (AG, AH, AI)
@@ -619,7 +656,7 @@ function lpfModel(units, p) {
   const totals = {
     pit_pool: pitPool, cit_pool: citPool, vat_pool: vatPool, gtf1, gtf2, pot, paid, cap_ref: capRef, threshold: thr, gtf1_parts: gtf1Parts, gtf2_parts: gtf2Parts,
     new_total: sum(mod.map((u) => u.env_new)), base_total: sum(mod.map((u) => u.env_current)), comp: Math.abs(sum(mod.map((u) => u.bw))), lpa2_env: level2Envelope, lpa2_base: lpa2Base, lpa2_rest: lpa2Rest, task: taskB,
-    released_l2: releasedL2, pit_for_gtf1: pitForGtf1, operation_total: operationTotal, development_fund: developmentFund, level2_envelope: level2Envelope,
+    released_l2: releasedL2, pit_for_gtf1: pitForGtf1, national_pit: nationalPit, national_cit: nationalCit, national_vat: nationalVat, operation_total: operationTotal, development_fund: developmentFund, level2_envelope: level2Envelope,
     op_nord: opNord, op_centru: opCentru, op_sud: opSud,
     salary_impact_applied: p.salary_policy ? S((u) => Number(u.salary_impact || 0), (u) => u.l1 || u.mun) : 0,
     salary_impact_available: S((u) => Number(u.salary_impact || 0), (u) => u.l1 || u.mun),
@@ -638,13 +675,21 @@ function lpfModel(units, p) {
   return { rows: out, totals };
 }
 
+// ---- bilingual Romanian / English catalogue -------------------------------------------------
+const I18N = {"en":{"SITE.BRAND":"AEI Digital Solutions","SITE.BACK_REFORM":"LPA reform","SITE.PREVIOUS_SIMULATOR":"Previous simulator","PAGE.META_TITLE":"Three PIT retention scenarios | AEI Digital Solutions","HEADER.TITLE":"Moldova local public finance scenarios","HEADER.INTRO":"Three PIT-retention scenarios applied to the 2025 data and the new administrative map. Select a scenario and then choose either its fiscal-neutral version or its recommended optimized fund composition. “Scenario preset” is the selected combination before your subsequent changes.","UNITS.ARIA":"Show amounts in","UNITS.LABEL":"Amounts in","UNITS.MILLION_LEI":"million lei","UNITS.LEI":"lei","SCENARIO.HEADING":"Scenario","SCENARIO.ARIA":"PIT retention scenario","SCENARIO.ONE":"1 · All LPA1 retain 100%","SCENARIO.TWO":"2 · All LPA1 retain 75%","SCENARIO.THREE":"3 · Raion-centre LPA1 retain 75%","POLICY.ARIA":"Scenario policy mode","POLICY.LABEL":"Policy mode","POLICY.NEUTRAL":"Fiscal-neutral","POLICY.OPTIMIZED":"Optimized fund","POLICY.SALARY":"New salary policy","SCENARIO.BADGE":"Scenario {scenario} · {policy_mode}","SCENARIO.LOADING":"Loading scenario {scenario}…","SCENARIO.ERROR_TITLE":"Scenario error","SCENARIO.ERROR_TEXT":"The scenario could not be recalculated: {error}","SCENARIO.ONE_TEXT":"All LPA1 retain 100% of PIT.","SCENARIO.TWO_TEXT":"All LPA1 retain 75% of PIT; the remaining PIT enters the available GTF1 base.","SCENARIO.THREE_TEXT":"LPA1 containing a former raion-centre town retain 75%; all other LPA1 retain 100%.","SCENARIO.COMMON_TEXT":"The GTF1 key is 65% population, 15% area and 20% fiscal capacity; the capacity threshold is {threshold}× and the incentive grant is 5% of GTF1.","SCENARIO.OPTIMIZED_TEXT":"The optimized fund uses {pit_share}% of total national PIT and {vat_share}% of total national VAT; GTF2 uses 3.0% of total national PIT.","SCENARIO.NEUTRAL_TEXT":"GTF1 uses {pit_share}% of total national PIT and {vat_share}% of total national VAT; GTF2 uses 3.0% of total national PIT. The resulting envelope is {amount}.","SCENARIO.SPECIAL_UNITS_TEXT":"Chișinău and Bălți retain 50%; Taraclia retains 100% and remains outside equalisation.","GUIDE.HEADING":"How the proposed model works","GUIDE.INTRO":"The steps follow the workbook in order. The figures in them follow your settings. Words in the glossary at the bottom of the page are explained there.","GUIDE.HOW_TO":"How to use the page: move a slider or type a value; everything below recalculates at once. Each setting shows the workbook cell it stands for; once you change it, the scenario-preset value appears under it with a reset link. “Reset parameters to scenario preset” puts all settings back.","GUIDE.STEP1_TITLE":"Taxes collected in 2025","GUIDE.STEP1_TEXT":"On each unit's territory the State Tax Service collected personal income tax (PIT, {pit_amount} outside UTAG under the selected salary-policy switch), corporate income tax (CIT, {cit_amount}) and VAT ({vat_amount}). The model shares parts of these three taxes.","GUIDE.STEP2_TITLE":"Direct shares","GUIDE.STEP2_TEXT":"Each unit keeps part of the PIT and CIT collected on its own territory: ordinary LPA1 {ordinary_pit} of PIT, LPA1 containing a former raion-centre town {centre_pit}, and all LPA1 {lpa1_cit} of CIT; Chișinău and Bălți retain {municipal_pit} of PIT, Taraclia retains {taraclia_pit}; CIT shares are separate: Chișinău {chisinau_cit}, Bălți {balti_cit}, Taraclia {taraclia_cit}. Together: {amount}.","GUIDE.STEP3_TITLE":"Pools","GUIDE.STEP3_TEXT":"What the units do not keep forms a PIT pool ({pit_pool}) and a CIT pool ({cit_pool}). VAT goes into a pool whole ({vat_pool}).","GUIDE.STEP4_TITLE":"LPA1 equalisation fund and fixed Level II envelope","GUIDE.STEP4_TEXT":"GTF1, for LPA1 units, applies {pit_rate} to the PIT remaining after direct shares and the fixed Level II envelope ({pit_base}), {cit_rate} of the CIT pool and {vat_rate} of VAT: {gtf1_total}. The fixed Level II envelope is {level2_envelope}. Its operating share {operating_share} produces {operating_total} and the residual produces the {development_total} development fund. The operating grant is calculated as Nord {north_amount}, Centru {centre_amount} and Sud {south_amount} from their linked shares. There is no Level II equalisation fund. The rest of each tax stays with the state budget.","GUIDE.STEP5_TITLE":"Incentive grant","GUIDE.STEP5_TEXT":"{grant_share} of GTF1 ({grant_pot}) is distributed in full to LPA1 units that collect more own revenue (local taxes and the property tax) relative to their PIT than {effort_threshold} the average. The first round applies a {cap} cap to each unit's own revenues; the second round distributes the entire remainder proportionally among first-round recipients. {amount_paid} is paid to {count} units.","GUIDE.STEP6_TITLE":"Equalisation","GUIDE.STEP6_TEXT":"The rest of GTF1 ({remaining_amount}) is distributed among the {count} Level I units using this key: {population_share} population, {area_share} area and {capacity_share} fiscal-capacity gap, meaning how far PIT per resident falls below {capacity_threshold}× the average, multiplied by population (so the gap is calculated per resident, not per unit). Separately, GTF2 ({gtf2_amount}) is distributed to the North, Centre and South regions using {region_population_share} population and {region_area_share} area. Taraclia retains its PIT share but remains outside equalisation; Chișinău and Bălți receive only their shared-tax allocations.","GUIDE.STEP7_TITLE":"Fiscal envelope","GUIDE.STEP7_TEXT":"For each unit: direct shares + equalisation + incentive grant. Outside UTAG, the current system is {current_amount} and the simulated full model is {simulated_amount}: {difference} ({difference_pct}) {more_or_less}. The policy aim is to keep this difference as close to zero as possible.","GUIDE.MORE":"more","GUIDE.LESS":"less","GUIDE.STEP8_TITLE":"Compared with 2025","GUIDE.STEP8_TEXT":"The 2025 baseline is what each unit actually received in 2025 under today's law: its shares of state taxes, its equalisation transfer and any compensation transfer, with the culture institutions that move from the regions to level I units ({culture_amount}) taken off the regions' baseline and added to the towns that take them over ({baseline_total} in all). A unit gains if its new total is above its baseline.","PARAMETERS.HEADING":"Parameters","PARAMETERS.RESET":"Reset to scenario preset","PARAMETERS.INTRO":"Each setting names its dashboard cell. Changed settings are marked.","PARAMETERS.DEFAULT":"default {value}","PARAMETERS.RESET_ONE":"reset","PARAMETERS.SAME_PRESET":"same as scenario preset","PARAMETERS.PRESET_COMPARISON":"scenario preset {preset_value} · {difference}","PARAMETERS.GROUP_DIRECT":"Direct shares","PARAMETERS.GROUP_DIRECT_NOTE":"The share of each tax a unit keeps from what is collected on its territory. What is not kept forms the pools the funds draw from.","PARAMETERS.LPA1_PIT":"PIT share, ordinary LPA1","PARAMETERS.LPA1_CENTRE_PIT":"PIT share, LPA1 containing a former raion-centre town","PARAMETERS.TARACLIA_PIT":"PIT share, Taraclia","PARAMETERS.LPA1_CIT":"CIT share, LPA1","PARAMETERS.CHISINAU_CIT":"CIT share, Chișinău","PARAMETERS.BALTI_CIT":"CIT share, Bălți","PARAMETERS.TARACLIA_CIT":"CIT share, Taraclia","PARAMETERS.REGIONS_PIT":"PIT share, regions (as % of their LPA1 PIT)","PARAMETERS.REGIONS_CIT":"CIT share, regions (as % of their LPA1 CIT)","PARAMETERS.MUNICIPAL_PIT":"PIT share, Chișinău and Bălți","PARAMETERS.MUNICIPAL_CIT":"CIT share, Chișinău, Bălți, Taraclia","PARAMETERS.GROUP_GTF1":"LPA1 fund (GTF1)","PARAMETERS.GROUP_GTF1_NOTE":"The selected share of each national tax total that forms the Level I financial support fund.","PARAMETERS.OF_PIT_POOL":"of total national PIT","PARAMETERS.OF_CIT_POOL":"of total national CIT","PARAMETERS.OF_VAT":"of total national VAT","PARAMETERS.GROUP_GTF2":"LPA2 fund (GTF2)","PARAMETERS.GROUP_GTF2_NOTE":"The Level II fund is initially set at 3.0% of total national PIT.","PARAMETERS.GROUP_KEY1":"LPA1 equalisation key","PARAMETERS.GROUP_KEY1_NOTE":"The three weights always total 100%. Population and area are editable; fiscal capacity is the remainder and cannot fall below 15%. Once that floor is reached, increasing population reduces area, or increasing area reduces population. The capacity gap is measured against the multiplier × the average PIT per head.","PARAMETERS.POPULATION":"population","PARAMETERS.AREA":"area","PARAMETERS.CAPACITY_GAP":"fiscal capacity gap","PARAMETERS.CAPACITY_MULTIPLIER":"fiscal capacity multiplier","PARAMETERS.CAPACITY_AUTO":"Calculated automatically: 100% − population − area; minimum 15%.","PARAMETERS.GROUP_KEY2":"LPA2 equalisation key","PARAMETERS.GROUP_KEY2_NOTE":"GTF2 is distributed to the three regions by 65% population and 35% area. The two weights always total 100%.","PARAMETERS.AREA_AUTO":"Calculated automatically: 100% − population.","PARAMETERS.GROUP_INCENTIVE":"Incentive grant","PARAMETERS.GROUP_INCENTIVE_NOTE":"The full earmarked share of GTF1 is distributed in two rounds. The first round applies the cap; the second distributes the entire remainder among first-round recipients.","PARAMETERS.INCENTIVE_SHARE":"share of GTF1","PARAMETERS.EFFORT_THRESHOLD":"threshold for fiscal effort","PARAMETERS.INCENTIVE_CAP":"first-round cap, % of own revenues","PARAMETERS.GROUP_LEVEL2":"Fixed Level II envelope","PARAMETERS.GROUP_LEVEL2_NOTE":"The total envelope and the operating share are inputs. The operating total is split by linked Nord, Centru and Sud shares; the residual becomes the development fund. Final grant amounts are calculated, not entered. There is no Level II equalisation fund.","PARAMETERS.LEVEL2_TOTAL":"Total fixed Level II envelope (million lei)","PARAMETERS.LEVEL2_OPERATING_SHARE":"Operating-grant share of the Level II envelope","PARAMETERS.NORTH_SHARE":"Nord share of the operating grant","PARAMETERS.CENTRE_SHARE":"Centru share of the operating grant","PARAMETERS.SOUTH_SHARE":"Sud share of the operating grant (calculated)","PARAMETERS.SOUTH_AUTO":"Calculated automatically: 100% − Nord − Centru.","PARAMETERS.LEGACY_LEVEL2":"Legacy Level II inputs","PARAMETERS.LEGACY_NORTH":"A: operating grant, Nord (million lei)","PARAMETERS.LEGACY_CENTRE":"A: operating grant, Centru (million lei)","PARAMETERS.LEGACY_SOUTH":"A: operating grant, Sud (million lei)","PARAMETERS.LEGACY_TASK":"Legacy task-money share (not used in these scenarios)","PARAMETERS.GROUP_UTAG":"UTAG","PARAMETERS.GROUP_UTAG_NOTE":"UTAG is outside the comparison. What it does not keep is added to the pools.","PARAMETERS.UTAG_PIT":"PIT share, UTAG","PARAMETERS.UTAG_CIT_VAT":"CIT share, UTAG and VAT","WARNING.KEY1_ADJUSTED":"The LPA1 {other_weight} weight was adjusted to {value} when {changed_weight} increased, keeping fiscal capacity at its 15% minimum and the three weights at 100%.","WARNING.REGIONAL_SHARE_ADJUSTED":"The other regional operating share was reduced so Nord, Centru and Sud remain exactly 100%.","WARNING.KEY1_TOTAL":"The LPA1 key weights add up to {percentage}%, so {amount} of GTF1 is {distribution_status}.","WARNING.LEFT_UNDISTRIBUTED":"left undistributed","WARNING.PAID_ABOVE_FUND":"paid out on top of the fund","WARNING.GTF2_UNUSED":"The LPA2 fund is set to {amount}, but the regions get the fixed envelope ({envelope_amount}), so that money is taken from the pools and reaches no unit.","WARNING.NEGATIVE_LEVEL2":"The operating grants add up to more than the envelope ({amount}), so the task money and the development fund are negative.","WARNING.KEY2_TOTAL":"The LPA2 key weights add up to {percentage}%, so {amount} of GTF2 is {distribution_status}.","WARNING.FUNDS_OVERDRAW":"The two funds take {percentage}% of the {tax_base}, more than there is.","WARNING.CIT_POOL":"The CIT pool is all CIT collected outside UTAG ({amount}), because no unit keeps a direct CIT share.","ENVELOPE.HEADING":"Fiscal envelope reference","ENVELOPE.DESCRIPTION":"The comparable total going to the local government system, outside UTAG. The policy aim is to keep the simulated envelope as close as possible to the current system: an ideal difference of zero.","ENVELOPE.DISTANCE":"Distance from neutral: {percentage}%","ENVELOPE.CURRENT":"Current system, 2025","ENVELOPE.SIMULATED":"Simulated full model","ENVELOPE.SALARY":"New salary policy","ENVELOPE.OFF":"Off","ENVELOPE.ADDED":"Added to the local system","ENVELOPE.REMOVED":"Removed from the local system","ENVELOPE.DIFFERENCE":"Envelope difference","ENVELOPE.CHANGE":"Change from current","ENVELOPE.NEUTRAL":"fiscal neutral: 0%","ENVELOPE.METER_ARIA":"Difference between simulated and current fiscal envelope","ENVELOPE.METER_VALUE":"{percentage} compared with the current fiscal envelope","FLOW.HEADING":"Where the money comes from and where it goes","FLOW.DESCRIPTION":"To scale. The national PIT, CIT and VAT totals include UTA Gagauzia, shown as a separate destination. The fiscal-envelope simulation remains outside UTAG. What is not allocated locally stays with the state budget. Hover a band for its amount.","FLOW.PIT":"PIT","FLOW.CIT":"CIT","FLOW.VAT":"VAT","FLOW.DIRECT_SHARES":"Direct shares","FLOW.GTF1":"LPA1 fund (GTF1)","FLOW.STATE_BUDGET":"State budget","FLOW.INCENTIVE":"Incentive grant","FLOW.EQUALISATION":"LPA1 equalisation","FLOW.LEVEL2":"Fixed Level II envelope","FLOW.LPA1_UNITS":"LPA1 units ({count})","FLOW.REGIONS":"Regions Nord, Centru, Sud","FLOW.MUNICIPALITIES":"Chișinău, Bălți, Taraclia","FLOW.PIT_SALARY":"PIT contingent with new salary policy","FLOW.TAX_COLLECTED":"{tax} collected in 2025 — national total","FLOW.TO_LOCAL":"to local budgets outside UTAG {amount} ({percentage}%)","FLOW.TO_STATE":"to the state budget {amount} ({percentage}%)","GROUPS.HEADING":"Envelope by recipient group","GROUPS.DESCRIPTION":"Regional grants are displayed for fiscal-envelope accounting; the old-versus-new Level II difference is not a policy performance comparison.","GROUPS.PART":"Part of the new map","GROUPS.BASELINE":"2025 baseline","GROUPS.NEW_MODEL":"New model — year 1","GROUPS.DIFFERENCE":"Difference","GROUPS.PRESET":"Scenario preset","GROUPS.VS_PRESET":"Difference vs preset","GROUPS.TOTAL":"Total, outside UTAG","MAP.HEADING":"Results on the new administrative map","MAP.DESCRIPTION":"The map follows the administrative-centre assignments in APL1 amalgamation data. Colours recalculate immediately when a parameter changes. UTAG is shown in grey because it is outside this simulation.","MAP.SHOW":"Show","MAP.DISPLAY":"Display","MAP.FIND_UNIT":"Find unit","MAP.TYPE_NAME":"Type a unit name","MAP.FIND":"Find","MAP.CLEAR":"Clear","MAP.METRIC_CHANGE":"Change against the 2025 baseline","MAP.METRIC_PER_RESIDENT":"New model per resident","MAP.METRIC_TOTAL":"New model total","MAP.METRIC_EQUALISATION":"Equalisation amount","MAP.METRIC_INCENTIVE":"Fiscal-effort incentive grant","MAP.METRIC_VAT2":"2% local VAT / total revenues","MAP.FILTER_ALL":"All modelled units","MAP.FILTER_EQUALISATION":"Equalisation recipients only","MAP.FILTER_INCENTIVE":"Incentive recipients only","MAP.ZOOM_ARIA":"Map view controls","MAP.ZOOM_IN":"Zoom in","MAP.ZOOM_OUT":"Zoom out","MAP.RESET_VIEW":"Reset view","MAP.EXPLORE":"Explore the map","MAP.EXPLORE_TEXT":"Move over a unit or click it to keep its figures here. A map click also selects the same unit in the detailed table below.","MAP.OUTSIDE_SIMULATION":"outside this simulation","MAP.UTAG_CONTEXT":"UTAG is retained on the map for geographic context and is not coloured by the model results.","MAP.POPULATION":"Population","MAP.TOTAL_BUDGET":"Total modelled budget","MAP.VAT2_AMOUNT":"Additional 2% of local VAT","MAP.VAT2_SHARE":"Additional VAT / total revenues","MAP.EQUALISATION":"Equalisation","MAP.EQUALISATION_BUDGET":"Equalisation / budget","MAP.FISCAL_INCENTIVE":"Fiscal-effort incentive","MAP.INCENTIVE_BUDGET":"Incentive / budget","MAP.BASELINE":"2025 baseline","MAP.NEW_MODEL":"New model","MAP.CHANGE":"Change","MAP.NOT_SELECTED":"not a selected beneficiary","MAP.COVERAGE":"{beneficiary_count} units match the selected display. {mapped_count} of {expected_count} modelled units have secure polygons. {not_plotted} Boundaries follow the workbook's administrative-centre assignments.","MAP.NOT_PLOTTED":"Not plotted: {unit_list}.","MAP.PER_RESIDENT":"{amount} lei/resident","MAP.LEGEND_UP_TO_1":"up to 1%","MAP.LEGEND_1_TO_2":"1% to 2%","MAP.LEGEND_2_TO_3":"2% to 3%","MAP.LEGEND_ABOVE_3":"above 3%","MAP.LEGEND_ZERO":"zero","INCENTIVE_LIST.HEADING":"Fiscal-effort incentive grant — beneficiaries","INCENTIVE_LIST.SUMMARY":"{count} beneficiaries; {amount} distributed in full in two rounds. “Total modelled budget” includes the new fiscal envelope, own revenues, road and LP293 allocations, and earmarked transfers.","INCENTIVE_LIST.UAT":"UAT","INCENTIVE_LIST.REGION":"Region / parent","INCENTIVE_LIST.TOTAL_BUDGET":"Total modelled budget","INCENTIVE_LIST.ALLOCATION":"Incentive allocation","INCENTIVE_LIST.PERCENTAGE":"Incentive as % of budget","DISTRIBUTION.HEADING":"LPA1 units by change against the 2025 baseline","DISTRIBUTION.DESCRIPTION":"The {count} LPA1 units outside UTAG, grouped as in the workbook's columns {first_column}–{last_column}. Solid bars show the current simulation and outlined bars the selected scenario preset. They overlap at the preset; after a parameter change they differ only when units cross a displayed band boundary. {tie_note}","DISTRIBUTION.TIE_NOTE":"{count} unit(s) change by exactly 0% and are counted in no band.","DISTRIBUTION.BELOW_20":"below −20%","DISTRIBUTION.MINUS_20_10":"−20% to −10%","DISTRIBUTION.MINUS_10_0":"−10% to 0","DISTRIBUTION.ZERO_10":"0 to +10%","DISTRIBUTION.PLUS_10_20":"+10% to +20%","DISTRIBUTION.ABOVE_20":"above +20%","DISTRIBUTION.LOSING":"Losing","DISTRIBUTION.GAINING":"Gaining","DISTRIBUTION.PRESET":"Scenario preset","DISTRIBUTION.TOOLTIP":"{band}: {current_count} units (selected scenario preset {preset_count})","UNITS_LIST.HEADING":"LPA1 units by change against the 2025 baseline - List","UNITS_LIST.FIND":"Find","UNITS_LIST.PLACEHOLDER":"Unit or region name","UNITS_LIST.SHOW":"Show","UNITS_LIST.ALL":"All units outside UTAG","UNITS_LIST.LPA1":"LPA1 units","UNITS_LIST.LEVEL2":"Level II units","UNITS_LIST.LOSING":"Losing units","UNITS_LIST.MOVED":"Moved 5% or more from scenario preset","UNITS_LIST.UNIT":"Unit","UNITS_LIST.PART":"Part","UNITS_LIST.BASELINE":"2025 baseline","UNITS_LIST.NEW_MODEL":"New model","UNITS_LIST.CHANGE":"Change","UNITS_LIST.PRESET":"Scenario preset","UNITS_LIST.VS_PRESET":"Current simulation vs preset","UNITS_LIST.TIE":"0% (tie)","UNITS_LIST.EMPTY":"No unit matches. Clear the search or pick another filter.","UNIT_DETAIL.LEVEL1":"LPA1, {parent}","UNIT_DETAIL.LEVEL2":"level II","UNIT_DETAIL.CLOSE":"Close","UNIT_DETAIL.CURRENT":"Current simulation","UNIT_DETAIL.PIT_SHARE":"PIT share","UNIT_DETAIL.CIT_SHARE":"CIT share","UNIT_DETAIL.FIXED_LEVEL2":"Fixed Level II envelope","UNIT_DETAIL.EQUALISATION":"Equalisation","UNIT_DETAIL.INCENTIVE":"Incentive grant","NOTES.HEADING":"Notes","NOTES.UNCHANGED_HEADING":"What stays as it is","NOTES.UNCHANGED_INTRO":"These amounts are the same under the proposed model and in 2025, so they do not change who gains or loses. They are left out of both totals and shown here for scale (all outside UTAG):","NOTES.ROAD_TAX":"Road tax 2025, {amount} (datasheet W): the share of the road fund paid to local budgets, as executed in 2025.","NOTES.LP293":"Other general transfers under the 2025 budget law (LP293), {amount} (datasheet X).","NOTES.EARMARKED":"Earmarked transfers, {amount} (datasheet T), mostly for education; they fund specific services and are outside both systems.","NOTES.OWN_REVENUES":"Own revenues of the LPA1 units (local taxes and the property tax), {amount}: each unit keeps them in both systems. The model uses them only to measure fiscal effort for the incentive grant.","NOTES.EDUCATION":"Education (datasheet Y) would be taken out of the baseline; the column is empty in the workbook ({amount}).","NOTES.UTAG":"UTAG (Gagauzia) keeps its own arrangement and is outside the model, the comparison and the totals.","NOTES.COMPENSATION_CULTURE":"The 2025 compensation transfers ({compensation_amount}, datasheet V) are part of the baseline, as money the units received in 2025. So are the culture institutions moved from the regions to level I units (datasheet Z, sheet Culture 2025): {culture_amount} added to the towns that take them over and taken off the regions' baseline.","GLOSSARY.HEADING":"Glossary","GLOSSARY.LPA1":"First-level local authorities: villages, communes and towns (primării). On the new map, {count} units outside UTAG.","GLOSSARY.LPA2":"Second-level authorities: the three regions (Nord, Centru, Sud) and the municipalities Chișinău, Bălți and Taraclia.","GLOSSARY.TAXES":"Personal income tax, corporate income tax, value added tax. Amounts are what was collected on each unit's territory in 2025 (the State Tax Service's contingents).","GLOSSARY.GTF1":"The equalisation fund for LPA1 units. Level II has no equalisation fund; the three regions receive only the fixed Level II envelope financed from unretained PIT.","GLOSSARY.KEY":"Each unit's share of a fund, a weighted mix of its shares of population, area and (for LPA1) the fiscal-capacity gap.","GLOSSARY.CAPACITY":"PIT collected per inhabitant. The gap is how far a unit is below the multiplier × the LPA1 average; units above it have no gap. A unit's share of the capacity part is its gap × its population, over the sum of gap × population.","GLOSSARY.ENVELOPE":"The comparable total going to the local government system, outside UTAG: shared state taxes plus the general equalisation or compensation transfer, after the model's competence shifts. Unchanged road tax, LP293 transfers, earmarked transfers and own revenues are excluded from both the current and simulated envelopes.","GLOSSARY.BASELINE":"What each unit received in 2025 under today's law, summed to the new map: tax shares + equalisation transfer + compensation transfers − education + culture institutions moved (Z).","GLOSSARY.UTAG":"The autonomous territorial unit of Gagauzia, outside the model.","GLOSSARY.WORKBOOK":"The team's Excel model ({workbook_name}). This page repeats its formulas; it does not read or change the file.","GLOSSARY.PRESET":"The parameter values as they are saved in the workbook, and the results they give. Columns marked “scenario preset” show the workbook's own figures; “your settings vs default” shows how far your changes move a unit (– means no change).","GLOSSARY.CELL_REFERENCES":"C16, F46 and so on are cells of the workbook's dashboard sheet; {column_a}, {column_b}, {column_c} are columns of its datasheet sheet.","FOOTER.DATA":"Data: {workbook_name}. Generated {date}.","FOOTER.VERSION":"version {version}","ACCESSIBILITY.ASCENDING":"ascending","ACCESSIBILITY.DESCENDING":"descending","ACCESSIBILITY.NONE":"none","FLOW.TO_UTAG":"to UTA Gagauzia {amount} ({percentage}%)","FLOW.UTAG":"UTA Gagauzia","ALLOCATION.TITLE":"Unallocated national tax shares and GTF headroom by scenario","ALLOCATION.HINT":"Show / hide the six-scenario estimate","ALLOCATION.NOTE":"Each percentage uses the national total of that tax, including UTA Gagauzia. ‘Before funds’ subtracts shared tax allocations. ‘After funds’ also subtracts the amounts assigned to GTF1 and GTF2.","ALLOCATION.SOURCE_HEADING":"Unallocated share of each tax source","ALLOCATION.CATEGORY_HEADING":"Allocations already committed by recipient category","ALLOCATION.SCENARIO":"Scenario","ALLOCATION.VERSION":"Version","ALLOCATION.UTAG":"UTAG","ALLOCATION.CHISINAU":"Chișinău","ALLOCATION.BALTI":"Bălți","ALLOCATION.TARACLIA":"Taraclia","ALLOCATION.CENTRES":"Raion centres","ALLOCATION.OTHER":"Other UAT","ALLOCATION.LEVEL2":"GTF2","ALLOCATION.BEFORE":"Remaining before GTF1/GTF2","ALLOCATION.BEFORE_PCT":"% before funds","ALLOCATION.GTF1":"GTF1","ALLOCATION.GTF1_PCT":"GTF1 % of gross","ALLOCATION.GTF2":"GTF2","ALLOCATION.GTF2_PCT":"GTF2 % of gross","ALLOCATION.AFTER":"Remaining after funds","ALLOCATION.AFTER_PCT":"% after funds","ALLOCATION.PIT_BEFORE_PCT":"PIT before funds","ALLOCATION.CIT_BEFORE_PCT":"CIT before funds","ALLOCATION.VAT_BEFORE_PCT":"VAT before funds","ALLOCATION.PIT_AFTER_PCT":"PIT after funds","ALLOCATION.CIT_AFTER_PCT":"CIT after funds","ALLOCATION.VAT_AFTER_PCT":"VAT after funds","ALLOCATION.NEUTRAL":"Fiscal-neutral","ALLOCATION.OPTIMIZED":"Optimized","FLOW.GTF2":"Level II fund (GTF2)","FLOW.DIRECT_SHARES_SHORT":"Shared taxes","FLOW.GTF1_SHORT":"GTF1 (Level I)","FLOW.GTF2_SHORT":"GTF2 (Level II)","FLOW.STATE_BUDGET_SHORT":"State budget","FLOW.INCENTIVE_SHORT":"Fiscal incentive","FLOW.EQUALISATION_SHORT":"Level I equalisation","FLOW.LPA1_SHORT":"Level I units (245)","FLOW.REGIONS_SHORT":"North, Centre, South","FLOW.MUNICIPALITIES_SHORT":"Chișinău, Bălți, Taraclia","FLOW.UTAG_SHORT":"UTA Gagauzia"},"ro":{"SITE.BRAND":"AEI Digital Solutions","SITE.BACK_REFORM":"Reforma APL","SITE.PREVIOUS_SIMULATOR":"Simulatorul anterior","PAGE.META_TITLE":"Simulatorul financiar LPF | AEI Digital Solutions","HEADER.TITLE":"Scenarii privind finanțele publice locale din Republica Moldova","HEADER.INTRO":"Trei scenarii privind cota IVPF aplicată datelor pentru anul 2025 și noii hărți administrative. Selectați un scenariu, apoi alegeți fie versiunea neutră fiscal, fie structura recomandată a fondului optimizat. „Configurația inițială a scenariului” este combinația selectată înainte de modificările ulterioare.","UNITS.ARIA":"Afișați sumele în","UNITS.LABEL":"Sumele sunt exprimate în","UNITS.MILLION_LEI":"milioane lei","UNITS.LEI":"lei","SCENARIO.HEADING":"Scenariu","SCENARIO.ARIA":"Scenariu privind cota IVPF păstrată","SCENARIO.ONE":"1 · Toate APL I păstrează 100%","SCENARIO.TWO":"2 · Toate APL I păstrează 75%","SCENARIO.THREE":"3 · APL I cu centru raional păstrează 75%","POLICY.ARIA":"Modul de politică al scenariului","POLICY.LABEL":"Mod de politică","POLICY.NEUTRAL":"Neutru fiscal","POLICY.OPTIMIZED":"Fond optimizat","POLICY.SALARY":"Noua politică salarială","SCENARIO.BADGE":"Scenariul {scenario} · {policy_mode}","SCENARIO.LOADING":"Se încarcă scenariul {scenario}…","SCENARIO.ERROR_TITLE":"Eroare de scenariu","SCENARIO.ERROR_TEXT":"Scenariul nu a putut fi recalculat: {error}","SCENARIO.ONE_TEXT":"Toate APL I păstrează 100% din IVPF.","SCENARIO.TWO_TEXT":"Toate APL I păstrează 75% din IVPF; IVPF rămas intră în baza disponibilă pentru FSF.","SCENARIO.THREE_TEXT":"APL I care includ un fost oraș-reședință de raion păstrează 75%; toate celelalte APL I păstrează 100%.","SCENARIO.COMMON_TEXT":"Cheia FSF este formată din 65% populație, 15% suprafață și 20% capacitate fiscală; pragul de capacitate este {threshold}×, iar transferul de stimulare a efortului fiscal reprezintă 5% din FSF.","SCENARIO.OPTIMIZED_TEXT":"Fondul optimizat utilizează {pit_share}% din totalul național IVPF și {vat_share}% din totalul național TVA; FSF2 utilizează 3,0% din totalul național IVPF.","SCENARIO.NEUTRAL_TEXT":"FSF1 utilizează {pit_share}% din totalul național IVPF și {vat_share}% din totalul național TVA; FSF2 utilizează 3,0% din totalul național IVPF. Anvelopa rezultată este {amount}.","SCENARIO.SPECIAL_UNITS_TEXT":"Chișinău și Bălți păstrează 50%; Taraclia păstrează 100% și rămâne în afara mecanismului de echilibrare.","GUIDE.HEADING":"Cum funcționează modelul propus","GUIDE.INTRO":"Etapele urmează ordinea din registrul de calcul. Valorile prezentate reflectă setările selectate. Termenii utilizați sunt explicați în glosarul de la sfârșitul paginii.","GUIDE.HOW_TO":"Cum se utilizează pagina: deplasați un cursor sau introduceți o valoare; toate rezultatele de mai jos se recalculează imediat. Fiecare setare indică celula corespunzătoare din registrul de calcul; după modificare, valoarea din configurația inițială a scenariului apare dedesubt, împreună cu opțiunea de resetare. „Restabilește parametrii configurației inițiale” readuce toate setările la valorile inițiale.","GUIDE.STEP1_TITLE":"Impozite colectate în 2025","GUIDE.STEP1_TEXT":"Pe teritoriul fiecărei unități, Serviciul Fiscal de Stat a colectat impozitul pe venitul persoanelor fizice (IVPF, {pit_amount} în afara UTAG, în funcție de opțiunea selectată pentru politica salarială), impozitul pe venitul persoanelor juridice (IVPJ, {cit_amount}) și TVA ({vat_amount}). Modelul repartizează părți din aceste trei impozite.","GUIDE.STEP2_TITLE":"Defalcări","GUIDE.STEP2_TEXT":"Fiecare unitate păstrează o parte din IVPF și IVPJ colectate pe teritoriul propriu: APL I obișnuite păstrează {ordinary_pit} din IVPF, APL I care includ un fost oraș-reședință de raion păstrează {centre_pit}, iar toate APL I păstrează {lpa1_cit} din IVPJ; Chișinău și Bălți păstrează {municipal_pit} din IVPF, iar Taraclia păstrează {taraclia_pit}; cotele IVPJ sunt distincte: Chișinău {chisinau_cit}, Bălți {balti_cit}, Taraclia {taraclia_cit}. În total: {amount}.","GUIDE.STEP3_TITLE":"Fonduri disponibile","GUIDE.STEP3_TEXT":"Partea pe care unitățile nu o păstrează formează fondul IVPF ({pit_pool}) și fondul IVPJ ({cit_pool}). TVA intră integral în fondul disponibil ({vat_pool}).","GUIDE.STEP4_TITLE":"Fondurile de susținere financiară FSF1 și FSF2","GUIDE.STEP4_TEXT":"FSF1 finanțează APL I, iar FSF2 finanțează cele trei regiuni. Ambele fonduri sunt definite ca procente din totalurile naționale ale IVPF, IVPJ și TVA.","GUIDE.STEP5_TITLE":"Transfer de stimulare a efortului fiscal","GUIDE.STEP5_TEXT":"{grant_share} din FSF ({grant_pot}) se distribuie integral unităților APL I ale căror venituri proprii colectate (impozite locale și impozit pe bunurile imobiliare), raportate la IVPF, depășesc de {effort_threshold} ori media. În primul tur se aplică plafonul de {cap} din veniturile proprii ale fiecărei unități; în al doilea tur, întreaga sumă rămasă se distribuie proporțional beneficiarilor din primul tur. Suma de {amount_paid} se plătește către {count} unități.","GUIDE.STEP6_TITLE":"Echilibrare","GUIDE.STEP6_TEXT":"Restul FSF1 ({remaining_amount}) se repartizează între cele {count} unități APL I după cheia: {population_share} populație, {area_share} suprafață și {capacity_share} decalaj de capacitate fiscală, adică măsura în care IVPF pe locuitor se situează sub {capacity_threshold}× media, înmulțită cu populația (astfel, decalajul se calculează pe locuitor, nu pe unitate). Separat, FSF2 ({gtf2_amount}) se distribuie regiunilor Nord, Centru și Sud după cheia {region_population_share} populație și {region_area_share} suprafață. Taraclia își păstrează cota IVPF, dar rămâne în afara echilibrării; Chișinău și Bălți primesc doar defalcările.","GUIDE.STEP7_TITLE":"Anvelopa fiscală","GUIDE.STEP7_TEXT":"Pentru fiecare unitate: defalcări + echilibrare + transfer de stimulare. În afara UTAG, sistemul actual reprezintă {current_amount}, iar modelul complet simulat reprezintă {simulated_amount}: cu {difference} ({difference_pct}) {more_or_less}. Obiectivul politicii este menținerea acestei diferențe cât mai aproape de zero.","GUIDE.MORE":"mai mult","GUIDE.LESS":"mai puțin","GUIDE.STEP8_TITLE":"Comparație cu anul 2025","GUIDE.STEP8_TEXT":"Valoarea de referință pentru 2025 este suma primită efectiv de fiecare unitate în 2025 conform legislației actuale: cotele din impozitele de stat, transferul de echilibrare și orice transfer de compensare, cu instituțiile de cultură transferate de la regiuni la unitățile de nivelul I ({culture_amount}) scăzute din valoarea de referință a regiunilor și adăugate orașelor care le preiau ({baseline_total} în total). O unitate înregistrează un câștig dacă noul total depășește valoarea sa de referință.","PARAMETERS.HEADING":"Parametri","PARAMETERS.RESET":"Restabilește configurația inițială","PARAMETERS.INTRO":"Fiecare setare indică celula corespunzătoare din dashboard. Setările modificate sunt marcate.","PARAMETERS.DEFAULT":"valoare inițială {value}","PARAMETERS.RESET_ONE":"restabilește","PARAMETERS.SAME_PRESET":"identic cu configurația inițială","PARAMETERS.PRESET_COMPARISON":"configurația inițială {preset_value} · {difference}","PARAMETERS.GROUP_DIRECT":"Defalcări","PARAMETERS.GROUP_DIRECT_NOTE":"Cota partajată din fiecare impozit pe care o unitate o păstrează din suma colectată pe teritoriul său. Partea nepăstrată formează fondurile din care se efectuează alocările.","PARAMETERS.LPA1_PIT":"Cota IVPF, APL I obișnuite","PARAMETERS.LPA1_CENTRE_PIT":"Cota IVPF, APL I care includ un fost oraș-reședință de raion","PARAMETERS.TARACLIA_PIT":"Cota IVPF, Taraclia","PARAMETERS.LPA1_CIT":"Cota IVPJ, APL I","PARAMETERS.CHISINAU_CIT":"Cota IVPJ, Chișinău","PARAMETERS.BALTI_CIT":"Cota IVPJ, Bălți","PARAMETERS.TARACLIA_CIT":"Cota IVPJ, Taraclia","PARAMETERS.REGIONS_PIT":"Cota IVPF, regiuni (ca % din IVPF aferent APL I)","PARAMETERS.REGIONS_CIT":"Cota IVPJ, regiuni (ca % din IVPJ aferent APL I)","PARAMETERS.MUNICIPAL_PIT":"Cota IVPF, Chișinău și Bălți","PARAMETERS.MUNICIPAL_CIT":"Cota IVPJ, Chișinău, Bălți și Taraclia","PARAMETERS.GROUP_GTF1":"Fondul de susținere financiară (FSF)","PARAMETERS.GROUP_GTF1_NOTE":"Cota selectată din totalul național al fiecărui impozit care formează fondul de susținere financiară pentru APL I.","PARAMETERS.OF_PIT_POOL":"din totalul național IVPF","PARAMETERS.OF_CIT_POOL":"din totalul național IVPJ","PARAMETERS.OF_VAT":"din totalul național TVA","PARAMETERS.GROUP_GTF2":"Fondul de susținere financiară pentru nivelul II (FSF2)","PARAMETERS.GROUP_GTF2_NOTE":"FSF2 este stabilit inițial la 3,0% din totalul național IVPF.","PARAMETERS.GROUP_KEY1":"Cheia de echilibrare pentru APL I","PARAMETERS.GROUP_KEY1_NOTE":"Cele trei ponderi însumează întotdeauna 100%. Populația și suprafața pot fi modificate; capacitatea fiscală reprezintă diferența rămasă și nu poate coborî sub 15%. După atingerea acestui prag minim, majorarea ponderii populației reduce ponderea suprafeței, iar majorarea ponderii suprafeței reduce ponderea populației. Decalajul de capacitate se măsoară în raport cu multiplicatorul × media IVPF pe locuitor.","PARAMETERS.POPULATION":"populație","PARAMETERS.AREA":"suprafață","PARAMETERS.CAPACITY_GAP":"decalaj de capacitate fiscală","PARAMETERS.CAPACITY_MULTIPLIER":"multiplicatorul capacității fiscale","PARAMETERS.CAPACITY_AUTO":"Calculat automat: 100% − populație − suprafață; minimum 15%.","PARAMETERS.GROUP_KEY2":"Cheia de echilibrare pentru APL II","PARAMETERS.GROUP_KEY2_NOTE":"FSF2 se distribuie celor trei regiuni după cheia 65% populație și 35% suprafață. Cele două ponderi însumează întotdeauna 100%.","PARAMETERS.AREA_AUTO":"Calculat automat: 100% − populație.","PARAMETERS.GROUP_INCENTIVE":"Transfer de stimulare a efortului fiscal","PARAMETERS.GROUP_INCENTIVE_NOTE":"Întreaga cotă rezervată din FSF este distribuită în două tururi. În primul tur se aplică plafonul; în al doilea tur se distribuie întreaga sumă rămasă beneficiarilor din primul tur.","PARAMETERS.INCENTIVE_SHARE":"cota din FSF","PARAMETERS.EFFORT_THRESHOLD":"pragul efortului fiscal","PARAMETERS.INCENTIVE_CAP":"plafonul din primul tur, % din veniturile proprii","PARAMETERS.GROUP_LEVEL2":"Anvelopa fixă a nivelului II","PARAMETERS.GROUP_LEVEL2_NOTE":"Anvelopa totală și cota pentru funcționare sunt parametri de intrare. Suma totală pentru funcționare se repartizează conform cotelor aferente regiunilor Nord, Centru și Sud; suma reziduală devine fond de dezvoltare. Valorile finale ale granturilor sunt calculate, nu introduse manual. Nu există un fond de echilibrare pentru nivelul II.","PARAMETERS.LEVEL2_TOTAL":"Anvelopa fixă totală a nivelului II (milioane lei)","PARAMETERS.LEVEL2_OPERATING_SHARE":"Cota grantului de funcționare din anvelopa nivelului II","PARAMETERS.NORTH_SHARE":"Cota regiunii Nord din grantul de funcționare","PARAMETERS.CENTRE_SHARE":"Cota regiunii Centru din grantul de funcționare","PARAMETERS.SOUTH_SHARE":"Cota regiunii Sud din grantul de funcționare (calculată)","PARAMETERS.SOUTH_AUTO":"Calculat automat: 100% − Nord − Centru.","PARAMETERS.LEGACY_LEVEL2":"Parametri vechi pentru nivelul II","PARAMETERS.LEGACY_NORTH":"A: grant de funcționare, Nord (milioane lei)","PARAMETERS.LEGACY_CENTRE":"A: grant de funcționare, Centru (milioane lei)","PARAMETERS.LEGACY_SOUTH":"A: grant de funcționare, Sud (milioane lei)","PARAMETERS.LEGACY_TASK":"Cota veche pentru finanțarea sarcinilor (nu se utilizează în aceste scenarii)","PARAMETERS.GROUP_UTAG":"UTAG","PARAMETERS.GROUP_UTAG_NOTE":"UTAG este în afara comparației. Partea pe care nu o păstrează se adaugă fondurilor disponibile.","PARAMETERS.UTAG_PIT":"Cota IVPF, UTAG","PARAMETERS.UTAG_CIT_VAT":"Cota IVPJ, UTAG și TVA","WARNING.KEY1_ADJUSTED":"Ponderea {other_weight} pentru APL I a fost ajustată la {value} atunci când a crescut ponderea {changed_weight}, menținând capacitatea fiscală la minimul de 15% și suma celor trei ponderi la 100%.","WARNING.REGIONAL_SHARE_ADJUSTED":"Cealaltă cotă regională pentru funcționare a fost redusă astfel încât cotele pentru Nord, Centru și Sud să însumeze exact 100%.","WARNING.KEY1_TOTAL":"Ponderile cheii APL I însumează {percentage}%, astfel încât {amount} din FSF {distribution_status}.","WARNING.LEFT_UNDISTRIBUTED":"rămâne nedistribuită","WARNING.PAID_ABOVE_FUND":"se plătește peste valoarea fondului","WARNING.GTF2_UNUSED":"Fondul APL II este stabilit la {amount}, dar regiunile primesc anvelopa fixă ({envelope_amount}); prin urmare, suma este preluată din fonduri, dar nu ajunge la nicio unitate.","WARNING.NEGATIVE_LEVEL2":"Granturile de funcționare depășesc anvelopa ({amount}), astfel încât finanțarea sarcinilor și fondul de dezvoltare devin negative.","WARNING.KEY2_TOTAL":"Ponderile cheii APL II însumează {percentage}%, astfel încât {amount} din FSF pentru APL II {distribution_status}.","WARNING.FUNDS_OVERDRAW":"Cele două fonduri preiau {percentage}% din {tax_base}, peste suma disponibilă.","WARNING.CIT_POOL":"Fondul IVPJ cuprinde întregul IVPJ colectat în afara UTAG ({amount}), deoarece nicio unitate nu beneficiază de defalcări din IVPJ.","ENVELOPE.HEADING":"Referința anvelopei fiscale","ENVELOPE.DESCRIPTION":"Totalul comparabil alocat sistemului administrației publice locale, în afara UTAG. Obiectivul politicii este menținerea anvelopei simulate cât mai aproape de sistemul actual: diferența ideală este zero.","ENVELOPE.DISTANCE":"Distanța față de neutralitate: {percentage}%","ENVELOPE.CURRENT":"Sistemul actual, 2025","ENVELOPE.SIMULATED":"Modelul complet simulat","ENVELOPE.SALARY":"Noua politică salarială","ENVELOPE.OFF":"Dezactivată","ENVELOPE.ADDED":"Adăugat sistemului local","ENVELOPE.REMOVED":"Retras din sistemul local","ENVELOPE.DIFFERENCE":"Diferența anvelopei","ENVELOPE.CHANGE":"Modificare față de sistemul actual","ENVELOPE.NEUTRAL":"neutralitate fiscală: 0%","ENVELOPE.METER_ARIA":"Diferența dintre anvelopa fiscală simulată și cea actuală","ENVELOPE.METER_VALUE":"{percentage} față de anvelopa fiscală actuală","FLOW.HEADING":"De unde provin banii și unde sunt alocați","FLOW.DESCRIPTION":"La scară. Totalurile naționale ale IVPF, IVPJ și TVA includ UTA Găgăuzia, prezentată ca destinație separată. Simularea anvelopei fiscale rămâne în afara UTAG. Partea nealocată local rămâne la bugetul de stat. Treceți cu cursorul peste o bandă pentru a vedea suma.","FLOW.PIT":"IVPF","FLOW.CIT":"IVPJ","FLOW.VAT":"TVA","FLOW.DIRECT_SHARES":"Defalcări","FLOW.GTF1":"Fondul de susținere financiară (FSF)","FLOW.STATE_BUDGET":"Bugetul de stat","FLOW.INCENTIVE":"Transfer de stimulare a efortului fiscal","FLOW.EQUALISATION":"Echilibrare APL I","FLOW.LEVEL2":"Anvelopa fixă a nivelului II","FLOW.LPA1_UNITS":"Unități APL I ({count})","FLOW.REGIONS":"Regiunile Nord, Centru și Sud","FLOW.MUNICIPALITIES":"Chișinău, Bălți și Taraclia","FLOW.PIT_SALARY":"Contingentul IVPF cu noua politică salarială","FLOW.TAX_COLLECTED":"{tax} colectat în 2025 — total național","FLOW.TO_LOCAL":"către bugetele locale din afara UTAG {amount} ({percentage}%)","FLOW.TO_STATE":"către bugetul de stat {amount} ({percentage}%)","GROUPS.HEADING":"Anvelopa pe grupuri de beneficiari","GROUPS.DESCRIPTION":"Granturile regionale sunt afișate pentru contabilizarea anvelopei fiscale; diferența dintre vechi și nou pentru nivelul II nu reprezintă o comparație a performanței politicii.","GROUPS.PART":"Componentă a noii hărți","GROUPS.BASELINE":"Referința 2025","GROUPS.NEW_MODEL":"Model nou — anul 1","GROUPS.DIFFERENCE":"Diferență","GROUPS.PRESET":"Preset scenariu","GROUPS.VS_PRESET":"Diferență față de preset","GROUPS.TOTAL":"Total, în afara UTAG","MAP.HEADING":"Rezultate pe noua hartă administrativă","MAP.DESCRIPTION":"Harta urmează alocările către centrele administrative din foaia „APL1 amalgamation data”. Culorile se recalculează imediat după modificarea unui parametru. UTAG este afișată cu gri deoarece se află în afara acestei simulări.","MAP.SHOW":"Indicator","MAP.DISPLAY":"Afișare","MAP.FIND_UNIT":"Caută UAT","MAP.TYPE_NAME":"Introduceți denumirea UAT","MAP.FIND":"Caută","MAP.CLEAR":"Șterge","MAP.METRIC_CHANGE":"Modificare față de valoarea de referință 2025","MAP.METRIC_PER_RESIDENT":"Noul model pe locuitor","MAP.METRIC_TOTAL":"Total conform noului model","MAP.METRIC_EQUALISATION":"Suma de echilibrare","MAP.METRIC_INCENTIVE":"Transferul de stimulare a efortului fiscal","MAP.METRIC_VAT2":"2% din TVA colectată în UAT / venituri totale","MAP.FILTER_ALL":"Toate unitățile modelate","MAP.FILTER_EQUALISATION":"Numai beneficiarii echilibrării","MAP.FILTER_INCENTIVE":"Numai beneficiarii stimulentului","MAP.ZOOM_ARIA":"Comenzi pentru vizualizarea hărții","MAP.ZOOM_IN":"Mărește","MAP.ZOOM_OUT":"Micșorează","MAP.RESET_VIEW":"Restabilește vizualizarea","MAP.EXPLORE":"Explorați harta","MAP.EXPLORE_TEXT":"Plasați cursorul peste o unitate sau faceți clic pentru a păstra aici valorile acesteia. Un clic pe hartă selectează aceeași unitate și în tabelul detaliat de mai jos.","MAP.OUTSIDE_SIMULATION":"în afara acestei simulări","MAP.UTAG_CONTEXT":"UTAG este păstrată pe hartă pentru context geografic și nu este colorată în funcție de rezultatele modelului.","MAP.POPULATION":"Populație","MAP.TOTAL_BUDGET":"Buget total modelat","MAP.VAT2_AMOUNT":"2% suplimentar din TVA colectată în UAT","MAP.VAT2_SHARE":"TVA suplimentară / venituri totale","MAP.EQUALISATION":"Echilibrare","MAP.EQUALISATION_BUDGET":"Echilibrare / buget","MAP.FISCAL_INCENTIVE":"Stimulent pentru efort fiscal","MAP.INCENTIVE_BUDGET":"Stimulent / buget","MAP.BASELINE":"Valoarea de referință 2025","MAP.NEW_MODEL":"Noul model","MAP.CHANGE":"Modificare","MAP.NOT_SELECTED":"nu este beneficiar în selecția curentă","MAP.COVERAGE":"{beneficiary_count} unități corespund afișării selectate. {mapped_count} din {expected_count} unități modelate au poligoane validate. {not_plotted} Limitele urmează alocările către centrele administrative din registrul de calcul.","MAP.NOT_PLOTTED":"Nu sunt reprezentate pe hartă: {unit_list}.","MAP.PER_RESIDENT":"{amount} lei/locuitor","MAP.LEGEND_UP_TO_1":"până la 1%","MAP.LEGEND_1_TO_2":"de la 1% la 2%","MAP.LEGEND_2_TO_3":"de la 2% la 3%","MAP.LEGEND_ABOVE_3":"peste 3%","MAP.LEGEND_ZERO":"zero","INCENTIVE_LIST.HEADING":"Transferul de stimulare a efortului fiscal — beneficiari","INCENTIVE_LIST.SUMMARY":"{count} beneficiari; {amount} distribuite integral în două tururi. „Bugetul total modelat” include noua anvelopă fiscală, veniturile proprii, alocările din taxa rutieră și LP293, precum și transferurile cu destinație specială.","INCENTIVE_LIST.UAT":"UAT","INCENTIVE_LIST.REGION":"Regiune / unitate părinte","INCENTIVE_LIST.TOTAL_BUDGET":"Buget total modelat","INCENTIVE_LIST.ALLOCATION":"Suma alocată pentru stimulare","INCENTIVE_LIST.PERCENTAGE":"Stimulentul ca % din buget","DISTRIBUTION.HEADING":"Unități APL I după modificarea față de valoarea de referință 2025","DISTRIBUTION.DESCRIPTION":"Cele {count} unități APL I din afara UTAG, grupate ca în coloanele {first_column}–{last_column} ale registrului de calcul. Barele pline arată simularea curentă, iar barele conturate arată configurația inițială a scenariului selectat. Acestea se suprapun la configurația inițială; după modificarea unui parametru, diferă numai atunci când unitățile trec dintr-un interval afișat în altul. {tie_note}","DISTRIBUTION.TIE_NOTE":"{count} unități au o modificare de exact 0% și nu sunt incluse în niciun interval.","DISTRIBUTION.BELOW_20":"sub −20%","DISTRIBUTION.MINUS_20_10":"de la −20% la −10%","DISTRIBUTION.MINUS_10_0":"de la −10% la 0","DISTRIBUTION.ZERO_10":"de la 0 la +10%","DISTRIBUTION.PLUS_10_20":"de la +10% la +20%","DISTRIBUTION.ABOVE_20":"peste +20%","DISTRIBUTION.LOSING":"În pierdere","DISTRIBUTION.GAINING":"În câștig","DISTRIBUTION.PRESET":"Configurația inițială a scenariului","DISTRIBUTION.TOOLTIP":"{band}: {current_count} unități (configurația inițială a scenariului selectat: {preset_count})","UNITS_LIST.HEADING":"Unități APL I după modificarea față de valoarea de referință 2025 — listă","UNITS_LIST.FIND":"Caută","UNITS_LIST.PLACEHOLDER":"Denumirea unității sau a regiunii","UNITS_LIST.SHOW":"Afișează","UNITS_LIST.ALL":"Toate unitățile din afara UTAG","UNITS_LIST.LPA1":"Unități APL I","UNITS_LIST.LEVEL2":"Unități de nivelul II","UNITS_LIST.LOSING":"Unități în pierdere","UNITS_LIST.MOVED":"Modificare de cel puțin 5% față de configurația inițială","UNITS_LIST.UNIT":"Unitate","UNITS_LIST.PART":"Componentă","UNITS_LIST.BASELINE":"Valoarea de referință 2025","UNITS_LIST.NEW_MODEL":"Noul model","UNITS_LIST.CHANGE":"Modificare","UNITS_LIST.PRESET":"Configurația inițială a scenariului","UNITS_LIST.VS_PRESET":"Simularea curentă față de configurația inițială","UNITS_LIST.TIE":"0% (egalitate)","UNITS_LIST.EMPTY":"Nicio unitate nu corespunde. Ștergeți căutarea sau selectați un alt filtru.","UNIT_DETAIL.LEVEL1":"APL I, {parent}","UNIT_DETAIL.LEVEL2":"nivelul II","UNIT_DETAIL.CLOSE":"Închide","UNIT_DETAIL.CURRENT":"Simularea curentă","UNIT_DETAIL.PIT_SHARE":"Cota IVPF","UNIT_DETAIL.CIT_SHARE":"Cota IVPJ","UNIT_DETAIL.FIXED_LEVEL2":"Anvelopa fixă a nivelului II","UNIT_DETAIL.EQUALISATION":"Echilibrare","UNIT_DETAIL.INCENTIVE":"Transfer de stimulare a efortului fiscal","NOTES.HEADING":"Note","NOTES.UNCHANGED_HEADING":"Ce rămâne neschimbat","NOTES.UNCHANGED_INTRO":"Aceste sume sunt identice în modelul propus și în anul 2025, astfel încât nu influențează cine câștigă sau pierde. Ele sunt excluse din ambele totaluri și sunt prezentate aici pentru a indica ordinul de mărime (toate în afara UTAG):","NOTES.ROAD_TAX":"Taxa rutieră 2025, {amount} (foaia de date W): cota din fondul rutier plătită bugetelor locale, conform execuției din 2025.","NOTES.LP293":"Alte transferuri generale conform legii bugetului pentru anul 2025 (LP293), {amount} (foaia de date X).","NOTES.EARMARKED":"Transferuri cu destinație specială, {amount} (foaia de date T), în principal pentru educație; acestea finanțează servicii specifice și sunt în afara ambelor sisteme.","NOTES.OWN_REVENUES":"Veniturile proprii ale unităților APL I (impozite locale și impozitul pe bunurile imobiliare), {amount}: fiecare unitate le păstrează în ambele sisteme. Modelul le utilizează numai pentru măsurarea efortului fiscal aferent transferului de stimulare.","NOTES.EDUCATION":"Educația (foaia de date Y) ar fi exclusă din valoarea de referință; coloana este necompletată în registrul de calcul ({amount}).","NOTES.UTAG":"UTAG (Găgăuzia) își păstrează regimul propriu și este în afara modelului, a comparației și a totalurilor.","NOTES.COMPENSATION_CULTURE":"Transferurile de compensare din 2025 ({compensation_amount}, foaia de date V) fac parte din valoarea de referință, fiind sume primite de unități în 2025. Același tratament se aplică instituțiilor de cultură transferate de la regiuni la unitățile de nivelul I (foaia de date Z, foaia „Culture 2025”): {culture_amount} se adaugă orașelor care le preiau și se scad din valoarea de referință a regiunilor.","GLOSSARY.HEADING":"Glosar","GLOSSARY.LPA1":"Autorități publice locale de nivelul I: sate, comune și orașe (primării). Pe noua hartă sunt {count} unități în afara UTAG.","GLOSSARY.LPA2":"Autorități de nivelul II: cele trei regiuni (Nord, Centru și Sud) și municipiile Chișinău, Bălți și Taraclia.","GLOSSARY.TAXES":"Impozitul pe venitul persoanelor fizice, impozitul pe venitul persoanelor juridice și taxa pe valoarea adăugată. Sumele reprezintă valorile colectate pe teritoriul fiecărei unități în 2025 (contingentele Serviciului Fiscal de Stat).","GLOSSARY.GTF1":"FSF1 este fondul de susținere financiară pentru unitățile APL I. FSF2 finanțează cele trei regiuni și se distribuie după populație și suprafață.","GLOSSARY.KEY":"Cota fiecărei unități dintr-un fond, calculată ca o combinație ponderată a cotelor sale din populație, suprafață și, pentru APL I, din decalajul de capacitate fiscală.","GLOSSARY.CAPACITY":"IVPF colectat pe locuitor. Decalajul reprezintă distanța dintre valoarea unei unități și multiplicatorul × media APL I; unitățile situate peste acest nivel nu au decalaj. Cota unei unități din componenta de capacitate este egală cu decalajul său × populația sa, raportat la suma tuturor valorilor decalaj × populație.","GLOSSARY.ENVELOPE":"Totalul comparabil alocat sistemului administrației publice locale, în afara UTAG: impozitele de stat partajate plus transferul general de echilibrare sau compensare, după transferurile de competențe prevăzute de model. Taxa rutieră neschimbată, transferurile LP293, transferurile cu destinație specială și veniturile proprii sunt excluse atât din anvelopa actuală, cât și din cea simulată.","GLOSSARY.BASELINE":"Suma primită de fiecare unitate în 2025 conform legislației actuale, agregată pe noua hartă: cote din impozite + transfer de echilibrare + transferuri de compensare − educație + instituții de cultură transferate (Z).","GLOSSARY.UTAG":"Unitatea teritorială autonomă Găgăuzia, aflată în afara modelului.","GLOSSARY.WORKBOOK":"Modelul Excel al echipei ({workbook_name}). Această pagină reproduce formulele sale; nu citește și nu modifică fișierul.","GLOSSARY.PRESET":"Valorile parametrilor salvate în registrul de calcul și rezultatele generate de acestea. Coloanele marcate „configurația inițială a scenariului” afișează valorile proprii ale registrului de calcul; „setările curente față de valorile inițiale” arată cât de mult deplasează modificările o unitate (– înseamnă nicio modificare).","GLOSSARY.CELL_REFERENCES":"C16, F46 etc. sunt celule din foaia de dashboard a registrului de calcul; {column_a}, {column_b} și {column_c} sunt coloane din foaia sa de date.","FOOTER.DATA":"Date: {workbook_name}. Generat la {date}.","FOOTER.VERSION":"versiunea {version}","ACCESSIBILITY.ASCENDING":"crescător","ACCESSIBILITY.DESCENDING":"descrescător","ACCESSIBILITY.NONE":"nesortat","FLOW.TO_UTAG":"către UTA Găgăuzia {amount} ({percentage}%)","FLOW.UTAG":"UTA Găgăuzia","ALLOCATION.TITLE":"Cotele nealocate din impozitele naționale și spațiul disponibil pentru FSF, pe scenarii","ALLOCATION.HINT":"Afișați / ascundeți estimarea pentru cele șase variante","ALLOCATION.NOTE":"Pentru fiecare impozit, procentul este calculat din totalul național, inclusiv UTA Găgăuzia. «Înainte de fonduri» scade defalcările. «După fonduri» scade și partea alocată FSF1 și FSF2.","ALLOCATION.SOURCE_HEADING":"Cota nealocată din fiecare sursă fiscală","ALLOCATION.CATEGORY_HEADING":"Alocări deja angajate pe categorii de beneficiari","ALLOCATION.SCENARIO":"Scenariu","ALLOCATION.VERSION":"Variantă","ALLOCATION.UTAG":"UTAG","ALLOCATION.CHISINAU":"Chișinău","ALLOCATION.BALTI":"Bălți","ALLOCATION.TARACLIA":"Taraclia","ALLOCATION.CENTRES":"Centre raionale","ALLOCATION.OTHER":"Celelalte UAT","ALLOCATION.LEVEL2":"FSF2","ALLOCATION.BEFORE":"Rămas înainte de FSF1/FSF2","ALLOCATION.BEFORE_PCT":"% înainte de fonduri","ALLOCATION.GTF1":"FSF1","ALLOCATION.GTF1_PCT":"FSF1 % din total","ALLOCATION.GTF2":"FSF2","ALLOCATION.GTF2_PCT":"FSF2 % din total","ALLOCATION.AFTER":"Rămas după fonduri","ALLOCATION.AFTER_PCT":"% după fonduri","ALLOCATION.PIT_BEFORE_PCT":"IVPF înainte de fonduri","ALLOCATION.CIT_BEFORE_PCT":"IVPJ înainte de fonduri","ALLOCATION.VAT_BEFORE_PCT":"TVA înainte de fonduri","ALLOCATION.PIT_AFTER_PCT":"IVPF după fonduri","ALLOCATION.CIT_AFTER_PCT":"IVPJ după fonduri","ALLOCATION.VAT_AFTER_PCT":"TVA după fonduri","ALLOCATION.NEUTRAL":"Neutră fiscal","ALLOCATION.OPTIMIZED":"Optimizată","FLOW.GTF2":"Fondul de susținere financiară pentru nivelul II (FSF2)","FLOW.DIRECT_SHARES_SHORT":"Defalcări","FLOW.GTF1_SHORT":"FSF1 (nivelul I)","FLOW.GTF2_SHORT":"FSF2 (nivelul II)","FLOW.STATE_BUDGET_SHORT":"Bugetul de stat","FLOW.INCENTIVE_SHORT":"Stimulare fiscală","FLOW.EQUALISATION_SHORT":"Echilibrare APL I","FLOW.LPA1_SHORT":"Unități APL I (245)","FLOW.REGIONS_SHORT":"Nord, Centru și Sud","FLOW.MUNICIPALITIES_SHORT":"Chișinău, Bălți, Taraclia","FLOW.UTAG_SHORT":"UTA Găgăuzia"}};
+let LANG = "ro";
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const SVGNS = "http://www.w3.org/2000/svg";
 const svgEl = (tag, attrs = {}, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
-const nf0 = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
-const nf1 = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
-const nf2 = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+let nf0, nf1, nf2;
+function setNumberLocale() {
+  const locale = LANG === "ro" ? "ro-RO" : "en-GB";
+  nf0 = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+  nf1 = new Intl.NumberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  nf2 = new Intl.NumberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+}
+setNumberLocale();
 const isNum = (x) => typeof x === "number" && Number.isFinite(x);
 let LEI = false;                                             // the "lei" switch: every amount to the leu
 const amt = (v) => (LEI ? nf0.format(Math.round(v)) + " lei" : nf1.format(v / 1e6) + " M");
@@ -662,10 +707,10 @@ const SPEC = {
   mun_pit: { kind: "pct", min: 0, max: 100, step: 0.5 }, mun_cit: { kind: "pct", min: 0, max: 100, step: 0.5 },
   gtf1_pit: { kind: "pct", min: 0, max: 100, step: 0.5 }, gtf1_cit: { kind: "pct", min: 0, max: 100, step: 0.5 }, gtf1_vat: { kind: "pct", min: 0, max: 100, step: 0.5 },
   gtf2_pit: { kind: "pct", min: 0, max: 100, step: 0.5 }, gtf2_cit: { kind: "pct", min: 0, max: 100, step: 0.5 }, gtf2_vat: { kind: "pct", min: 0, max: 100, step: 0.5 },
-  k1_pop: { kind: "pct", min: 0, max: 85, step: 1 }, k1_area: { kind: "pct", min: 0, max: 85, step: 1 }, k1_cap: { kind: "pct", min: 15, max: 100, step: 1 },
-  cap_mult: { kind: "mult", min: 0.5, max: 3, step: 0.05 },
-  k2_pop: { kind: "pct", min: 0, max: 100, step: 1 }, k2_area: { kind: "pct", min: 0, max: 100, step: 1 },
-  inc_pot: { kind: "pct", min: 0, max: 20, step: 0.1 }, inc_threshold: { kind: "mult", min: 0.5, max: 2, step: 0.05 }, inc_cap: { kind: "pct", min: 0, max: 100, step: 1 },
+  k1_pop: { kind: "pct", min: 0, max: 85, step: 0.5 }, k1_area: { kind: "pct", min: 0, max: 85, step: 0.5 }, k1_cap: { kind: "pct", min: 15, max: 100, step: 0.5 },
+  cap_mult: { kind: "mult", min: 0.5, max: 3, step: 0.1 },
+  k2_pop: { kind: "pct", min: 0, max: 100, step: 0.5 }, k2_area: { kind: "pct", min: 0, max: 100, step: 0.5 },
+  inc_pot: { kind: "pct", min: 0, max: 20, step: 0.5 }, inc_threshold: { kind: "mult", min: 0.5, max: 2, step: 0.1 }, inc_cap: { kind: "pct", min: 0, max: 100, step: 1 },
   comp_threshold: { kind: "pct", min: -100, max: 0, step: 1 }, comp_rate: { kind: "pct", min: 0, max: 100, step: 1 },
   // 09.11 (v8): the level II envelope in three parts; operating grants shown in million lei
   op_nord: { kind: "mlei", min: 0, max: 200, step: 0.1 }, op_centru: { kind: "mlei", min: 0, max: 200, step: 0.1 }, op_sud: { kind: "mlei", min: 0, max: 200, step: 0.1 },
@@ -699,14 +744,14 @@ const P0 = Object.fromEntries(INP.params.map((q) => [q.key, q.value]));
 P0.gtf2_extra = INP.gtf2_extra || []; P0.v6a = !!INP.v6a;   // the rules of workbook v6a (lpf_model.js)
 P0.comp_mode = "whole";                  // the workbook's rule (BZ); "excess" is a page option
 P0.gtf1_extra = INP.gtf1_extra || []; P0.lpa2_fixed = !!INP.lpa2_fixed; if (V7) P0.transition = "phase";
-P0.lpa2_parts = !!INP.lpa2_parts;                                 // 09.11 (v8): A + B + C
+P0.lpa2_fixed = false; P0.lpa2_parts = false;                    // FSF2 replaces the former fixed Level II envelope
 const V8 = P0.lpa2_parts;
 P0.salary_policy = false;
 const cur = { ...P0 };
 const byCell = {}; for (const q of INP.params) (byCell[q.cell] ||= []).push(q.key);
-const HIDDEN_SCENARIO_KEYS = new Set(["region_pit", "region_cit", "gtf2_pit", "gtf2_cit", "gtf2_vat", "k2_pop", "k2_area", "mun_share", "mun_cit", "op_nord", "op_centru", "op_sud"]);
+const HIDDEN_SCENARIO_KEYS = new Set(["region_pit", "region_cit", "mun_share", "mun_cit", "op_nord", "op_centru", "op_sud", "l2_total", "l2_operating_share", "op_north_share", "op_centre_share", "op_south_share"]);
 const shown = INP.params.filter((q) => byCell[q.cell][0] === q.key && !HIDDEN_SCENARIO_KEYS.has(q.key));
-const toUI = (k, v) => (SPEC[k].kind === "pct" ? +(v * 100).toFixed(4) : SPEC[k].kind === "mlei" ? +(v / 1e6).toFixed(4) : +v.toFixed(4));
+const toUI = (k, v) => (SPEC[k].kind === "pct" ? +(v * 100).toFixed(1) : SPEC[k].kind === "mlei" ? +(v / 1e6).toFixed(1) : +v.toFixed(1));
 const fromUI = (k, x) => (SPEC[k].kind === "pct" ? x / 100 : SPEC[k].kind === "mlei" ? x * 1e6 : x);
 const fmtP = (k, v) => (SPEC[k].kind === "pct" ? nf1.format(v * 100).replace(/\.0$/, "") + "%" : SPEC[k].kind === "mlei" ? nf1.format(v / 1e6) + " M lei" : SPEC[k].kind === "num" ? nf0.format(v) + (k === "phase_years" ? " years" : "") : nf2.format(v) + "×");
 const same = (a, b) => Math.abs(a - b) < 1e-12;
@@ -1258,12 +1303,811 @@ function prepareCompactLayout() {
 function update() {
   C = run(cur);
   $("#reset").disabled = shown.every((q) => same(cur[q.key], P0[q.key])) && cur.comp_mode === P0.comp_mode;
-  drawWarns(); drawGuide(); drawEnvelope(); drawFigs(); drawFlow(); drawGroups(); drawMap(); drawIncentiveList(); drawDist(); drawUnits(); drawDetail(); drawNotes();
+  drawWarns(); drawGuide(); drawEnvelope(); drawFigs(); drawFlow(); drawAllocationAnalysis(); drawGroups(); drawMap(); drawIncentiveList(); drawDist(); drawUnits(); drawDetail(); drawNotes();
 }
 { const m = INP.workbook.match(/ v([0-9]+[a-z]?)\.xlsx$/), wbver = $("#wbver"); if (m && wbver) wbver.textContent = "version " + m[1]; }
 $("#footer").textContent = `Data: ${INP.workbook}. Generated ${INP.generated || ""}.`;
 
-buildControls(); bindSalaryToggle(); prepareCompactLayout(); applyScenario(2);
+
+// ---- bilingual Romanian / English interface ---------------------------------------------------
+function tr(key, vars = {}) {
+  const table = I18N[LANG] || I18N.en;
+  const fallback = I18N.en[key] || key;
+  return String(table[key] || fallback).replace(/\{([a-zA-Z0-9_]+)\}/g, (all, name) =>
+    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : all
+  );
+}
+
+const I18N_GROUP_KEYS = {
+  "Direct shares": "PARAMETERS.GROUP_DIRECT",
+  "LPA1 fund (GTF1)": "PARAMETERS.GROUP_GTF1",
+  "LPA2 fund (GTF2)": "PARAMETERS.GROUP_GTF2",
+  "LPA1 equalisation key": "PARAMETERS.GROUP_KEY1",
+  "LPA2 equalisation key": "PARAMETERS.GROUP_KEY2",
+  "Incentive grant": "PARAMETERS.GROUP_INCENTIVE",
+  "Fixed Level II envelope": "PARAMETERS.GROUP_LEVEL2",
+  "Legacy Level II inputs": "PARAMETERS.LEGACY_LEVEL2",
+  UTAG: "PARAMETERS.GROUP_UTAG",
+};
+
+const I18N_GROUP_NOTES = {
+  "Direct shares": "PARAMETERS.GROUP_DIRECT_NOTE",
+  "LPA1 fund (GTF1)": "PARAMETERS.GROUP_GTF1_NOTE",
+  "LPA2 fund (GTF2)": "PARAMETERS.GROUP_GTF2_NOTE",
+  "LPA1 equalisation key": "PARAMETERS.GROUP_KEY1_NOTE",
+  "LPA2 equalisation key": "PARAMETERS.GROUP_KEY2_NOTE",
+  "Incentive grant": "PARAMETERS.GROUP_INCENTIVE_NOTE",
+  "Fixed Level II envelope": "PARAMETERS.GROUP_LEVEL2_NOTE",
+  UTAG: "PARAMETERS.GROUP_UTAG_NOTE",
+};
+
+const I18N_PARAMETER_KEYS = {
+  lpa1_pit: "PARAMETERS.LPA1_PIT",
+  lpa1_centre_pit: "PARAMETERS.LPA1_CENTRE_PIT",
+  taraclia_pit: "PARAMETERS.TARACLIA_PIT",
+  lpa1_cit: "PARAMETERS.LPA1_CIT",
+  chisinau_cit: "PARAMETERS.CHISINAU_CIT",
+  balti_cit: "PARAMETERS.BALTI_CIT",
+  taraclia_cit: "PARAMETERS.TARACLIA_CIT",
+  region_pit: "PARAMETERS.REGIONS_PIT",
+  region_cit: "PARAMETERS.REGIONS_CIT",
+  mun_pit: "PARAMETERS.MUNICIPAL_PIT",
+  mun_cit: "PARAMETERS.MUNICIPAL_CIT",
+  gtf1_pit: "PARAMETERS.OF_PIT_POOL",
+  gtf1_cit: "PARAMETERS.OF_CIT_POOL",
+  gtf1_vat: "PARAMETERS.OF_VAT",
+  gtf2_pit: "PARAMETERS.OF_PIT_POOL",
+  gtf2_cit: "PARAMETERS.OF_CIT_POOL",
+  gtf2_vat: "PARAMETERS.OF_VAT",
+  k1_pop: "PARAMETERS.POPULATION",
+  k1_area: "PARAMETERS.AREA",
+  k1_cap: "PARAMETERS.CAPACITY_GAP",
+  cap_mult: "PARAMETERS.CAPACITY_MULTIPLIER",
+  k2_pop: "PARAMETERS.POPULATION",
+  k2_area: "PARAMETERS.AREA",
+  inc_pot: "PARAMETERS.INCENTIVE_SHARE",
+  inc_threshold: "PARAMETERS.EFFORT_THRESHOLD",
+  inc_cap: "PARAMETERS.INCENTIVE_CAP",
+  l2_total: "PARAMETERS.LEVEL2_TOTAL",
+  l2_operating_share: "PARAMETERS.LEVEL2_OPERATING_SHARE",
+  op_north_share: "PARAMETERS.NORTH_SHARE",
+  op_centre_share: "PARAMETERS.CENTRE_SHARE",
+  op_south_share: "PARAMETERS.SOUTH_SHARE",
+  op_nord: "PARAMETERS.LEGACY_NORTH",
+  op_centru: "PARAMETERS.LEGACY_CENTRE",
+  op_sud: "PARAMETERS.LEGACY_SOUTH",
+  mun_share: "PARAMETERS.LEGACY_TASK",
+  utag_pit: "PARAMETERS.UTAG_PIT",
+  utag_cit: "PARAMETERS.UTAG_CIT_VAT",
+  utag_vat: "PARAMETERS.UTAG_CIT_VAT",
+};
+
+const groupLabel = (group) => tr(I18N_GROUP_KEYS[group] || group);
+const groupNote = (group) => I18N_GROUP_NOTES[group] ? tr(I18N_GROUP_NOTES[group]) : "";
+const parameterLabel = (q) => tr(I18N_PARAMETER_KEYS[q.key] || q.label);
+const recipientGroupLabel = (group) => tr({
+  lpa1: "FLOW.LPA1_UNITS",
+  regions: "FLOW.REGIONS",
+  mun: "FLOW.MUNICIPALITIES",
+}[group], group === "lpa1" ? { count: C?.U?.filter((u) => u.l1).length || 245 } : {});
+
+function setStaticText(selector, key) {
+  const element = typeof selector === "string" ? $(selector) : selector;
+  if (element) element.textContent = tr(key);
+}
+
+function setStaticAttribute(selector, attribute, key) {
+  const element = $(selector);
+  if (element) element.setAttribute(attribute, tr(key));
+}
+
+function applyStaticText() {
+  document.documentElement.lang = LANG;
+  document.title = tr("PAGE.META_TITLE");
+  setStaticText("h1", "HEADER.TITLE");
+  setStaticText("header .sub", "HEADER.INTRO");
+  setStaticText(".unitsw .note", "UNITS.LABEL");
+  setStaticText("#u-m", "UNITS.MILLION_LEI");
+  setStaticText("#u-l", "UNITS.LEI");
+  setStaticAttribute(".unitsw", "aria-label", "UNITS.ARIA");
+
+  setStaticText("#scenario-h", "SCENARIO.HEADING");
+  setStaticAttribute(".scenario-bar", "aria-label", "SCENARIO.ARIA");
+  setStaticText('[data-scenario="1"]', "SCENARIO.ONE");
+  setStaticText('[data-scenario="2"]', "SCENARIO.TWO");
+  setStaticText('[data-scenario="3"]', "SCENARIO.THREE");
+  setStaticAttribute(".policy-mode", "aria-label", "POLICY.ARIA");
+  setStaticText(".mode-label", "POLICY.LABEL");
+  setStaticText('[data-policy-mode="neutral"]', "POLICY.NEUTRAL");
+  setStaticText('[data-policy-mode="optimized"]', "POLICY.OPTIMIZED");
+  const salaryLabel = $(".salary-toggle");
+  if (salaryLabel) {
+    const input = salaryLabel.querySelector("input");
+    salaryLabel.replaceChildren(input, document.createTextNode(" " + tr("POLICY.SALARY")));
+  }
+
+  setStaticText("#g-h", "GUIDE.HEADING");
+  const guideNotes = document.querySelectorAll(".guide-body > p.note");
+  if (guideNotes[0]) guideNotes[0].textContent = tr("GUIDE.INTRO");
+  if (guideNotes[1]) guideNotes[1].textContent = tr("GUIDE.HOW_TO");
+
+  setStaticAttribute(".params", "aria-label", "PARAMETERS.HEADING");
+  setStaticText(".ptop h2", "PARAMETERS.HEADING");
+  setStaticText("#reset", "PARAMETERS.RESET");
+  setStaticText(".params > p.note", "PARAMETERS.INTRO");
+
+  setStaticText("#envelope-h", "ENVELOPE.HEADING");
+  setStaticText(".envelope-head p.note", "ENVELOPE.DESCRIPTION");
+  const envelopeLabels = document.querySelectorAll(".envelope-labels span");
+  if (envelopeLabels[1]) envelopeLabels[1].textContent = tr("ENVELOPE.NEUTRAL");
+  setStaticAttribute(".envelope-track", "aria-label", "ENVELOPE.METER_ARIA");
+
+  const flowSection = $("#sk")?.closest("section.card");
+  if (flowSection) {
+    setStaticText(flowSection.querySelector(":scope > h2"), "FLOW.HEADING");
+    setStaticText(flowSection.querySelector(":scope > p.note"), "FLOW.DESCRIPTION");
+  }
+  setStaticText("#allocation-title", "ALLOCATION.TITLE");
+  setStaticText("#allocation-hint", "ALLOCATION.HINT");
+  setStaticText("#allocation-note", "ALLOCATION.NOTE");
+  setStaticText("#allocation-source-heading", "ALLOCATION.SOURCE_HEADING");
+  setStaticText("#allocation-category-heading", "ALLOCATION.CATEGORY_HEADING");
+  const groupsSection = $("#groups")?.closest("section.card");
+  if (groupsSection) {
+    setStaticText(groupsSection.querySelector(":scope > h2"), "GROUPS.HEADING");
+    setStaticText(groupsSection.querySelector(":scope > p.note"), "GROUPS.DESCRIPTION");
+  }
+
+  setStaticText("#map-h", "MAP.HEADING");
+  setStaticText("#map-h + p.note", "MAP.DESCRIPTION");
+  setStaticText('label[for="mapmetric"]', "MAP.SHOW");
+  setStaticText('label[for="mapfilter"]', "MAP.DISPLAY");
+  setStaticText('label[for="mapq"]', "MAP.FIND_UNIT");
+  setStaticAttribute("#mapq", "placeholder", "MAP.TYPE_NAME");
+  setStaticText("#mapfind", "MAP.FIND");
+  setStaticText("#mapclear", "MAP.CLEAR");
+  setStaticText('#mapmetric option[value="chg"]', "MAP.METRIC_CHANGE");
+  setStaticText('#mapmetric option[value="pc"]', "MAP.METRIC_PER_RESIDENT");
+  setStaticText('#mapmetric option[value="new"]', "MAP.METRIC_TOTAL");
+  setStaticText('#mapmetric option[value="eq"]', "MAP.METRIC_EQUALISATION");
+  setStaticText('#mapmetric option[value="grant"]', "MAP.METRIC_INCENTIVE");
+  setStaticText('#mapmetric option[value="vat2"]', "MAP.METRIC_VAT2");
+  setStaticText('#mapfilter option[value="all"]', "MAP.FILTER_ALL");
+  setStaticText('#mapfilter option[value="equalisation"]', "MAP.FILTER_EQUALISATION");
+  setStaticText('#mapfilter option[value="incentive"]', "MAP.FILTER_INCENTIVE");
+  setStaticAttribute(".map-zoom", "aria-label", "MAP.ZOOM_ARIA");
+  setStaticAttribute("#mapzin", "title", "MAP.ZOOM_IN");
+  setStaticAttribute("#mapzout", "title", "MAP.ZOOM_OUT");
+  setStaticAttribute("#mapreset", "title", "MAP.RESET_VIEW");
+  setStaticText("#mapreset", "MAP.RESET_VIEW");
+  setStaticAttribute("#finmap", "aria-label", "MAP.HEADING");
+
+  setStaticText("#incentive-list-h", "INCENTIVE_LIST.HEADING");
+  const distSection = $("#dist")?.closest("section.card");
+  if (distSection) setStaticText(distSection.querySelector("h2"), "DISTRIBUTION.HEADING");
+  const distLegend = distSection?.querySelectorAll(".legend span");
+  if (distLegend?.[0]) distLegend[0].textContent = tr("DISTRIBUTION.LOSING");
+  if (distLegend?.[1]) distLegend[1].textContent = tr("DISTRIBUTION.GAINING");
+  if (distLegend?.[2]) distLegend[2].textContent = tr("DISTRIBUTION.PRESET");
+  setStaticAttribute("#dist", "aria-label", "DISTRIBUTION.HEADING");
+
+  const unitsSection = $("#units")?.closest("section.card");
+  if (unitsSection) setStaticText(unitsSection.querySelector("h2"), "UNITS_LIST.HEADING");
+  setStaticText('label[for="q"]', "UNITS_LIST.FIND");
+  setStaticAttribute("#q", "placeholder", "UNITS_LIST.PLACEHOLDER");
+  setStaticText('label[for="lvl"]', "UNITS_LIST.SHOW");
+  setStaticText('#lvl option[value="all"]', "UNITS_LIST.ALL");
+  setStaticText('#lvl option[value="lpa1"]', "UNITS_LIST.LPA1");
+  setStaticText('#lvl option[value="lpa2"]', "UNITS_LIST.LEVEL2");
+  setStaticText('#lvl option[value="lose"]', "UNITS_LIST.LOSING");
+  setStaticText('#lvl option[value="moved"]', "UNITS_LIST.MOVED");
+  setStaticText("#n-h", "NOTES.HEADING");
+
+  const languageButton = $("#language-toggle");
+  if (languageButton) {
+    languageButton.textContent = LANG === "ro" ? "EN" : "RO";
+    languageButton.setAttribute("aria-label", LANG === "ro" ? "Switch to English" : "Comută în limba română");
+    languageButton.title = languageButton.getAttribute("aria-label");
+  }
+}
+
+function setLanguage(language) {
+  LANG = language === "en" ? "en" : "ro";
+  setNumberLocale();
+  applyStaticText();
+  buildControls();
+  refreshKeyLimits();
+  syncMode();
+  syncSalaryToggle();
+  update();
+}
+
+function bindLanguageToggle() {
+  const button = $("#language-toggle");
+  if (!button || button.dataset.bound) return;
+  button.dataset.bound = "1";
+  button.addEventListener("click", () => setLanguage(LANG === "ro" ? "en" : "ro"));
+}
+
+// Presets expressed as shares of the national tax totals. The optimized rates
+// preserve, to the nearest 0.5 percentage point, the previous optimized fund
+// amounts when moving from residual-pool denominators to national denominators.
+Object.assign(SCENARIOS[1], { neutral_pit: 0.070, neutral_vat: 0.045, optimized_pit: 0.075, optimized_vat: 0.090 });
+Object.assign(SCENARIOS[2], { neutral_pit: 0.115, neutral_vat: 0.075, optimized_pit: 0.145, optimized_vat: 0.075 });
+Object.assign(SCENARIOS[3], { neutral_pit: 0.095, neutral_vat: 0.060, optimized_pit: 0.110, optimized_vat: 0.070 });
+
+function enforceEqualisationKey(changedKey) {
+  const touched = [];
+  if (changedKey === "k1_pop" || changedKey === "k1_area") {
+    const other = changedKey === "k1_pop" ? "k1_area" : "k1_pop";
+    const available = 0.85;
+    if (cur[changedKey] + cur[other] > available + 1e-12) {
+      cur[other] = Math.max(0, available - cur[changedKey]);
+      touched.push(other);
+      constraintMessage = { key: "WARNING.KEY1_ADJUSTED", vars: {
+        other_weight: parameterLabel(INP.params.find((q) => q.key === other)),
+        value: fmtP(other, cur[other]),
+        changed_weight: parameterLabel(INP.params.find((q) => q.key === changedKey)),
+      } };
+    }
+    cur.k1_cap = 1 - cur.k1_pop - cur.k1_area;
+    touched.push("k1_cap");
+  } else if (changedKey === "k2_pop") {
+    cur.k2_area = 1 - cur.k2_pop;
+    touched.push("k2_area");
+  } else if (changedKey === "op_north_share" || changedKey === "op_centre_share") {
+    const other = changedKey === "op_north_share" ? "op_centre_share" : "op_north_share";
+    if (cur[changedKey] + cur[other] > 1) {
+      cur[other] = Math.max(0, 1 - cur[changedKey]);
+      touched.push(other);
+      constraintMessage = { key: "WARNING.REGIONAL_SHARE_ADJUSTED", vars: {} };
+    }
+    cur.op_south_share = 1 - cur.op_north_share - cur.op_centre_share;
+    touched.push("op_south_share");
+  }
+  return touched;
+}
+
+function refreshKeyLimits() {
+  const k1 = $("#lim-k1_cap"), k2 = $("#lim-k2_area"), south = $("#lim-op_south_share");
+  if (k1) k1.textContent = tr("PARAMETERS.CAPACITY_AUTO");
+  if (k2) k2.textContent = tr("PARAMETERS.AREA_AUTO");
+  if (south) south.textContent = tr("PARAMETERS.SOUTH_AUTO");
+}
+
+function buildControls() {
+  const groups = [...new Set(shown.map((q) => q.group))].sort((x, y) => (x === "UTAG") - (y === "UTAG"));
+  $("#controls").innerHTML = groups.map((group) => {
+    const note = groupNote(group);
+    return `<fieldset data-group="${esc(group)}"><legend>${esc(groupLabel(group))}</legend>${note ? `<p class="gnote">${esc(note)}</p>` : ""}
+      ${shown.filter((q) => q.group === group).map((q) => {
+        const spec = SPEC[q.key], label = parameterLabel(q), computed = COMPUTED_KEY.has(q.key);
+        const described = computed ? ` aria-describedby="lim-${q.key}"` : "", disabled = computed ? " disabled" : "";
+        return `<div class="prm" id="p-${q.key}"><div class="top"><label for="n-${q.key}">${esc(label)}</label><code>${q.cell}</code></div>
+          <div class="ctl"><input type="range" id="r-${q.key}" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${toUI(q.key, cur[q.key])}" aria-label="${esc(label)}"${described}${disabled}>
+          <input type="number" id="n-${q.key}" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${toUI(q.key, cur[q.key])}"${described}${disabled}></div>
+          ${computed ? `<div class="limit" id="lim-${q.key}"></div>` : ""}<div class="wb" id="w-${q.key}"></div></div>`;
+      }).join("")}</fieldset>`;
+  }).join("");
+  for (const q of shown) {
+    const set = (value) => {
+      if (!Number.isFinite(value)) return;
+      constraintMessage = "";
+      const spec = SPEC[q.key], bounded = Math.max(spec.min, Math.min(spec.max, value));
+      for (const key of byCell[q.cell]) cur[key] = fromUI(q.key, bounded);
+      const touched = enforceEqualisationKey(q.key);
+      for (const key of new Set([q.key, ...touched])) syncControl(key);
+      refreshKeyLimits();
+      update();
+    };
+    $(`#r-${q.key}`).addEventListener("input", (event) => set(parseFloat(event.target.value)));
+    $(`#n-${q.key}`).addEventListener("change", (event) => set(parseFloat(event.target.value)));
+    syncControl(q.key);
+  }
+  refreshKeyLimits();
+}
+
+function syncControl(key) {
+  const q = INP.params.find((item) => item.key === key), changed = !same(cur[key], P0[key]);
+  const range = $(`#r-${key}`), number = $(`#n-${key}`), panel = $(`#p-${key}`), note = $(`#w-${key}`);
+  if (!q || !range || !number || !panel || !note) return;
+  range.value = toUI(key, cur[key]);
+  number.value = toUI(key, cur[key]);
+  panel.classList.toggle("changed", changed);
+  if (COMPUTED_KEY.has(key)) {
+    note.textContent = changed ? tr("PARAMETERS.DEFAULT", { value: fmtP(key, P0[key]) }) : "";
+    return;
+  }
+  note.innerHTML = changed ? `${esc(tr("PARAMETERS.DEFAULT", { value: fmtP(key, P0[key]) }))} <button class="undo" type="button" data-undo="${key}">${esc(tr("PARAMETERS.RESET_ONE"))}</button>` : "";
+  if (changed) note.querySelector("button").addEventListener("click", () => {
+    constraintMessage = "";
+    for (const related of byCell[q.cell]) cur[related] = P0[related];
+    const touched = enforceEqualisationKey(key);
+    for (const related of new Set([key, ...touched])) syncControl(related);
+    refreshKeyLimits();
+    update();
+  });
+}
+
+function applyScenario(id) {
+  const scenario = SCENARIOS[id];
+  if (!scenario) return;
+  const badge = $("#scenario-badge"), explanation = $("#scenario-explain");
+  const keepSalaryPolicy = !!cur.salary_policy;
+  document.querySelectorAll("[data-scenario]").forEach((button) => {
+    const active = +button.dataset.scenario === id;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  syncPolicyModeButtons();
+  badge.textContent = tr("SCENARIO.LOADING", { scenario: id });
+  try {
+    activeScenario = id;
+    Object.assign(P0, {
+      lpa1_pit: scenario.lpa1_pit, lpa1_centre_pit: scenario.lpa1_centre_pit, mun_pit: .5, taraclia_pit: 1,
+      region_pit: 0, region_cit: 0, gtf2_pit: .03, gtf2_cit: 0, gtf2_vat: 0, mun_share: 0, gtf1_extra: [], salary_policy: false,
+      lpa2_fixed: false, lpa2_parts: false, k2_pop: .65, k2_area: .35,
+      k1_pop: .65, k1_area: .15, k1_cap: .20, cap_mult: scenario.cap_mult,
+      inc_pot: .05, inc_threshold: 1, gtf1_cit: 0,
+      gtf1_pit: activePolicyMode === "optimized" ? scenario.optimized_pit : scenario.neutral_pit,
+      gtf1_vat: activePolicyMode === "optimized" ? scenario.optimized_vat : scenario.neutral_vat,
+    });
+    Object.assign(cur, P0);
+    cur.salary_policy = keepSalaryPolicy;
+    W = run(P0);
+    C = run(cur);
+    buildControls();
+    refreshKeyLimits();
+    syncMode();
+    syncSalaryToggle();
+    const policyMode = tr(activePolicyMode === "optimized" ? "POLICY.OPTIMIZED" : "POLICY.NEUTRAL");
+    badge.textContent = tr("SCENARIO.BADGE", { scenario: id, policy_mode: policyMode });
+    const scenarioText = tr({ 1: "SCENARIO.ONE_TEXT", 2: "SCENARIO.TWO_TEXT", 3: "SCENARIO.THREE_TEXT" }[id]);
+    const commonText = tr("SCENARIO.COMMON_TEXT", { threshold: nf1.format(scenario.cap_mult) });
+    const fundText = activePolicyMode === "optimized"
+      ? tr("SCENARIO.OPTIMIZED_TEXT", { pit_share: nf1.format(P0.gtf1_pit * 100), vat_share: nf1.format(P0.gtf1_vat * 100) })
+      : tr("SCENARIO.NEUTRAL_TEXT", { pit_share: nf1.format(P0.gtf1_pit * 100), vat_share: nf1.format(P0.gtf1_vat * 100), amount: money(W.t.new_total) });
+    explanation.textContent = `${scenarioText} ${commonText} ${fundText} ${tr("SCENARIO.SPECIAL_UNITS_TEXT")}`;
+    update();
+  } catch (error) {
+    badge.textContent = tr("SCENARIO.ERROR_TITLE");
+    explanation.textContent = tr("SCENARIO.ERROR_TEXT", { error: error?.message || String(error) });
+    console.error(error);
+  }
+}
+
+function drawEnvelope() {
+  const totals = C.t, current = totals.base_total, simulated = totals.new_total, difference = simulated - current;
+  const ratio = current ? difference / current : 0, percentValue = ratio * 100;
+  const actionKey = difference > 0.5 ? "ENVELOPE.ADDED" : difference < -0.5 ? "ENVELOPE.REMOVED" : "ENVELOPE.DIFFERENCE";
+  const marker = Math.max(0, Math.min(100, 50 + (percentValue / 15) * 50));
+  $("#envelope-summary").innerHTML = [
+    [tr("ENVELOPE.CURRENT"), M(current), ""],
+    [tr("ENVELOPE.SIMULATED"), M(simulated), ""],
+    [tr("ENVELOPE.SALARY"), cur.salary_policy ? sgnM(totals.salary_impact_applied) : tr("ENVELOPE.OFF"), cur.salary_policy ? "up" : ""],
+    [tr(actionKey), sgnM(difference), difference >= 0 ? "up" : "down"],
+    [tr("ENVELOPE.CHANGE"), pct(ratio, 2), difference >= 0 ? "up" : "down"],
+  ].map(([label, value, cls]) => `<div class="envelope-metric"><span>${esc(label)}</span><b class="${cls}">${value}</b></div>`).join("");
+  $("#envelope-distance").textContent = tr("ENVELOPE.DISTANCE", { percentage: nf2.format(Math.abs(percentValue)) });
+  const track = $(".envelope-track"), markerElement = $("#envelope-marker");
+  markerElement.style.left = `${marker}%`;
+  track.setAttribute("aria-valuenow", nf2.format(percentValue));
+  track.setAttribute("aria-valuetext", tr("ENVELOPE.METER_VALUE", { percentage: pct(ratio, 2) }));
+}
+
+function drawWarns() {
+  const warnings = [], p = cur;
+  if (constraintMessage) warnings.push(typeof constraintMessage === "string" ? constraintMessage : tr(constraintMessage.key, constraintMessage.vars));
+  const key1 = p.k1_pop + p.k1_area + p.k1_cap, key2 = p.k2_pop + p.k2_area;
+  if (!same(key1, 1)) warnings.push(tr("WARNING.KEY1_TOTAL", {
+    percentage: nf1.format(key1 * 100), amount: money(Math.abs(1 - key1) * (C.t.gtf1 - C.t.pot)),
+    distribution_status: tr(key1 < 1 ? "WARNING.LEFT_UNDISTRIBUTED" : "WARNING.PAID_ABOVE_FUND"),
+  }));
+  if (p.lpa2_fixed && C.t.gtf2 > 0.5) warnings.push(tr("WARNING.GTF2_UNUSED", { amount: money(C.t.gtf2), envelope_amount: money(C.t.lpa2_env) }));
+  if (V8 && p.lpa2_fixed && C.t.lpa2_rest < 0) warnings.push(tr("WARNING.NEGATIVE_LEVEL2", { amount: money(C.t.lpa2_env) }));
+  if (!same(key2, 1) && !p.lpa2_fixed) warnings.push(tr("WARNING.KEY2_TOTAL", {
+    percentage: nf1.format(key2 * 100), amount: money(Math.abs(1 - key2) * C.t.gtf2),
+    distribution_status: tr(key2 < 1 ? "WARNING.LEFT_UNDISTRIBUTED" : "WARNING.PAID_ABOVE_FUND"),
+  }));
+  for (const [base, label] of [["pit", tr("FLOW.PIT")], ["cit", tr("FLOW.CIT")], ["vat", tr("FLOW.VAT")]]) {
+    const share = p["gtf1_" + base] + p["gtf2_" + base];
+    if (share > 1 + 1e-12) warnings.push(tr("WARNING.FUNDS_OVERDRAW", { percentage: nf1.format(share * 100), tax_base: label }));
+  }
+  if (p.gtf1_cit + p.gtf2_cit > 0 && p.lpa1_cit + p.region_cit + p.chisinau_cit + p.balti_cit + p.taraclia_cit === 0) {
+    warnings.push(tr("WARNING.CIT_POOL", { amount: money(C.t.cit_pool) }));
+  }
+  $("#warns").innerHTML = warnings.map((warning) => `<div class="warn">${esc(warning)}</div>`).join("");
+}
+
+// A roomier Sankey renderer with deliberately short visible labels. Full labels
+// remain available in the hover text for every node and band.
+function sankey(svg, nodes, links, options) {
+  svg.replaceChildren();
+  const layers = Math.max(...nodes.map((node) => node.layer)) + 1;
+  const width = options.w, height = options.h, nodeWidth = 14, top = 18, gap = options.gap;
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  nodes.forEach((node) => {
+    const incoming = links.filter((link) => link.to === node.id).reduce((sum, link) => sum + link.value, 0);
+    const outgoing = links.filter((link) => link.from === node.id).reduce((sum, link) => sum + link.value, 0);
+    node.value = Math.max(incoming, outgoing);
+  });
+  const byLayer = [...Array(layers).keys()].map((layer) => nodes.filter((node) => node.layer === layer));
+  const scale = Math.min(...byLayer.map((layerNodes) =>
+    (height - top * 2 - gap * (layerNodes.length - 1)) / Math.max(1, layerNodes.reduce((sum, node) => sum + node.value, 0))
+  ));
+  const xForLayer = (layer) => options.left + layer * (width - options.left - options.right - nodeWidth) / (layers - 1);
+  byLayer.forEach((layerNodes, layer) => {
+    const occupied = layerNodes.reduce((sum, node) => sum + Math.max(node.value * scale, 2), 0) + gap * (layerNodes.length - 1);
+    let y = top + (height - top * 2 - occupied) / 2;
+    for (const node of layerNodes) {
+      node.x = xForLayer(layer);
+      node.y = y;
+      node.h = Math.max(node.value * scale, 2);
+      node.oy = node.y;
+      node.iy = node.y;
+      y += node.h + gap;
+    }
+  });
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  for (const link of links) {
+    const source = byId.get(link.from), target = byId.get(link.to), thickness = Math.max(link.value * scale, 1.5);
+    const y0 = source.oy, y1 = target.iy;
+    source.oy += thickness;
+    target.iy += thickness;
+    const x0 = source.x + nodeWidth, x1 = target.x, mid = (x0 + x1) / 2;
+    const path = svgEl("path", {
+      d: `M${x0},${y0} C${mid},${y0} ${mid},${y1} ${x1},${y1} L${x1},${y1 + thickness} C${mid},${y1 + thickness} ${mid},${y0 + thickness} ${x0},${y0 + thickness} Z`,
+      class: "band", fill: `var(${options.color(link)})`,
+    }, svg);
+    svgEl("title", {}, path).textContent = `${source.fullLabel || source.label} → ${target.fullLabel || target.label}: ${money(link.value)}`;
+  }
+  for (const node of nodes) {
+    const rectangle = svgEl("rect", { x: node.x, y: node.y, width: nodeWidth, height: node.h, rx: 2, fill: `var(${NCOL[node.id] || "--model"})` }, svg);
+    svgEl("title", {}, rectangle).textContent = `${node.fullLabel || node.label}: ${money(node.value)}`;
+    const textX = node.x + nodeWidth + 7, centreY = node.y + node.h / 2;
+    svgEl("text", { x: textX, y: centreY - 3, "font-size": 12, "font-weight": 700, class: "halo" }, svg).textContent = node.label;
+    svgEl("text", { x: textX, y: centreY + 12, "font-size": 11, class: "halo" }, svg).textContent = money(node.value);
+  }
+}
+
+function flow(R) {
+  const totals = R.t, shares = { lpa1: 0, regions: 0, mun: 0 }, eq2 = { lpa1: 0, regions: 0, mun: 0 };
+  let pitShares = 0, citShares = 0, eq1 = 0, incentive = 0, eq1Municipal = 0, envelope = 0, task = 0;
+  for (const unit of R.U) {
+    if (!unit.g) continue;
+    const pit = unit.direct_pit || 0, cit = unit.direct_cit || 0;
+    pitShares += pit; citShares += cit; shares[unit.g] += pit + cit;
+    if (unit.l1) { eq1 += unit.gtf_new || 0; incentive += unit.grant || 0; }
+    else if (unit.g1) eq1Municipal += unit.gtf_new || 0;
+    else if (R.t.lpa2_env && unit.g === "regions") envelope += unit.gtf_new || 0;
+    else if (unit.eq2) eq2[unit.g] += unit.gtf_new || 0;
+    task += unit.task || 0;
+  }
+  const utagUnit = R.U.find((unit) => unit.level === "II" && unit.meta === "X");
+  const utag = { pit: Number(utagUnit?.direct_pit || 0), cit: Number(utagUnit?.direct_cit || 0), vat: Number(utagUnit?.direct_vat || 0) };
+  utag.total = utag.pit + utag.cit + utag.vat;
+  const base = INP.bases;
+  const statePit = Math.max(0, base.pit + totals.salary_impact_applied - pitShares - totals.gtf1_parts.pit - totals.gtf2_parts.pit - totals.lpa2_env);
+  const stateCit = Math.max(0, base.cit - citShares - totals.gtf1_parts.cit - totals.gtf2_parts.cit);
+  const stateVat = Math.max(0, base.vat - totals.gtf1_parts.vat - totals.gtf2_parts.vat);
+  const stateTaxes = statePit + stateCit + stateVat;
+  const nodes = [
+    ["pit", tr("FLOW.PIT"), 0, tr("FLOW.PIT")], ["cit", tr("FLOW.CIT"), 0, tr("FLOW.CIT")], ["vat", tr("FLOW.VAT"), 0, tr("FLOW.VAT")],
+    ["shares", tr("FLOW.DIRECT_SHARES_SHORT"), 1, tr("FLOW.DIRECT_SHARES")], ["gtf1", tr("FLOW.GTF1_SHORT"), 1, tr("FLOW.GTF1")],
+    ...(totals.gtf2 > 0.5 ? [["gtf2", tr("FLOW.GTF2_SHORT"), 1, tr("FLOW.GTF2")], ["eq2", tr("FLOW.GTF2_SHORT"), 2, tr("FLOW.GTF2")]] : []),
+    ...(stateTaxes > 0.5 ? [["budget", tr("FLOW.STATE_BUDGET_SHORT"), 1, tr("FLOW.STATE_BUDGET")]] : []),
+    ["incentive", tr("FLOW.INCENTIVE_SHORT"), 2, tr("FLOW.INCENTIVE")], ["eq1", tr("FLOW.EQUALISATION_SHORT"), 2, tr("FLOW.EQUALISATION")],
+    ...(envelope + task > 0.5 ? [["env2", tr("FLOW.LEVEL2"), 2]] : []),
+    ["lpa1", tr("FLOW.LPA1_SHORT"), 3, recipientGroupLabel("lpa1")], ["regions", tr("FLOW.REGIONS_SHORT"), 3, recipientGroupLabel("regions")], ["mun", tr("FLOW.MUNICIPALITIES_SHORT"), 3, recipientGroupLabel("mun")],
+    ...(utag.total > 0.5 ? [["utag", tr("FLOW.UTAG_SHORT"), 3, tr("FLOW.UTAG")]] : []),
+  ].map(([id, label, layer, fullLabel]) => ({ id, label, layer, fullLabel: fullLabel || label }));
+  const links = [
+    ["pit", "shares", pitShares], ["cit", "shares", citShares], ["pit", "gtf1", totals.gtf1_parts.pit], ["pit", "env2", totals.lpa2_env],
+    ["cit", "gtf1", totals.gtf1_parts.cit], ["vat", "gtf1", totals.gtf1_parts.vat], ["pit", "gtf2", totals.gtf2_parts.pit],
+    ["cit", "gtf2", totals.gtf2_parts.cit], ["vat", "gtf2", totals.gtf2_parts.vat], ["pit", "budget", statePit],
+    ["cit", "budget", stateCit], ["vat", "budget", stateVat], ["gtf1", "incentive", totals.paid], ["gtf1", "eq1", totals.gtf1 - totals.paid],
+    ["gtf2", "eq2", totals.gtf2], ["shares", "lpa1", shares.lpa1], ["shares", "regions", shares.regions], ["shares", "mun", shares.mun],
+    ["incentive", "lpa1", incentive], ["eq1", "lpa1", eq1], ["eq2", "regions", eq2.regions], ["eq2", "mun", eq2.mun],
+    ["eq1", "mun", eq1Municipal], ["env2", "regions", envelope], ["env2", "mun", task],
+    ["pit", "utag", utag.pit], ["cit", "utag", utag.cit], ["vat", "utag", utag.vat],
+  ].filter((link) => isNum(link[2]) && link[2] > 0.5).map(([from, to, value]) => ({ from, to, value }));
+  return { nodes, links, pitSh: pitShares, citSh: citShares, statePit, stateCit, stateVat, stateTaxes, utag };
+}
+
+function drawFlow() {
+  const result = flow(C), totals = C.t, base = INP.bases;
+  NCOL.utag = "--accent";
+  sankey($("#sk"), result.nodes, result.links, { w: 1100, h: 560, left: 10, right: 220, gap: 44, color: (link) => (["pit", "cit", "vat"].includes(link.from) ? NCOL[link.from] : NCOL[link.from] || "--model") });
+  const taxes = [
+    ["FLOW.PIT", base.pit + totals.salary_impact_applied + result.utag.pit, result.utag.pit, result.pitSh + totals.gtf1_parts.pit + totals.gtf2_parts.pit + totals.lpa2_env, result.statePit, "C7", !!cur.salary_policy],
+    ["FLOW.CIT", base.cit + result.utag.cit, result.utag.cit, result.citSh + totals.gtf1_parts.cit + totals.gtf2_parts.cit, result.stateCit, "D7", false],
+    ["FLOW.VAT", base.vat + result.utag.vat, result.utag.vat, totals.gtf1_parts.vat + totals.gtf2_parts.vat, result.stateVat, "E7", false],
+  ];
+  $("#taxes").innerHTML = taxes.map(([taxKey, total, utagAmount, local, state, cell, salary]) => {
+    const taxName = salary ? tr("FLOW.PIT_SALARY") : tr(taxKey);
+    return `<div class="tax"><h3>${esc(tr("FLOW.TAX_COLLECTED", { tax: taxName }))} <code>${cell}</code></h3><span class="amt">${money(total)}</span>
+      <p>${esc(tr("FLOW.TO_UTAG", { amount: money(utagAmount), percentage: nf1.format(100 * utagAmount / total) }))}</p>
+      <p>${esc(tr("FLOW.TO_LOCAL", { amount: money(local), percentage: nf1.format(100 * local / total) }))}</p>
+      <p>${esc(tr("FLOW.TO_STATE", { amount: money(state), percentage: nf1.format(100 * state / total) }))}</p></div>`;
+  }).join("");
+}
+
+function allocationScenarioParameters(scenarioId, mode) {
+  const scenario = SCENARIOS[scenarioId], p = { ...P0 };
+  Object.assign(p, {
+    lpa1_pit: scenario.lpa1_pit, lpa1_centre_pit: scenario.lpa1_centre_pit,
+    mun_pit: 0.5, taraclia_pit: 1, lpa1_cit: 0, chisinau_cit: 0, balti_cit: 0, taraclia_cit: 0,
+    region_pit: 0, region_cit: 0, utag_pit: 1, utag_cit: 1, utag_vat: 1,
+    gtf2_pit: 0.03, gtf2_cit: 0, gtf2_vat: 0, mun_share: 0, gtf1_extra: [], salary_policy: false,
+    lpa2_fixed: false, lpa2_parts: false, k2_pop: 0.65, k2_area: 0.35,
+    k1_pop: 0.65, k1_area: 0.15, k1_cap: 0.20, cap_mult: scenario.cap_mult,
+    inc_pot: 0.05, inc_threshold: 1, gtf1_cit: 0,
+    gtf1_pit: mode === "optimized" ? scenario.optimized_pit : scenario.neutral_pit,
+    gtf1_vat: mode === "optimized" ? scenario.optimized_vat : scenario.neutral_vat,
+  });
+  return p;
+}
+
+function taxAllocationRow(scenarioId, mode) {
+  const result = run(allocationScenarioParameters(scenarioId, mode));
+  const categories = { utag: 0, chisinau: 0, balti: 0, taraclia: 0, centres: 0, other: 0 };
+  const directByTax = { pit: 0, cit: 0, vat: 0 };
+  for (const unit of result.U) {
+    let category = null;
+    if (unit.level === "II" && unit.meta === "X") category = "utag";
+    else if (String(unit.org1) === "1001") category = "chisinau";
+    else if (String(unit.org1) === "1020") category = "balti";
+    else if (String(unit.org1) === "6") category = "taraclia";
+    else if (unit.level === "I" && unit.meta !== "X") category = RAION_CENTRES.has(String(unit.org1)) ? "centres" : "other";
+    const pit = Number(unit.direct_pit || 0), cit = Number(unit.direct_cit || 0), vat = Number(unit.direct_vat || 0);
+    if (category) categories[category] += pit + cit + vat;
+    directByTax.pit += pit;
+    directByTax.cit += cit;
+    directByTax.vat += vat;
+  }
+  const utagSource = INP.units.find((unit) => unit.level === "II" && unit.meta === "X");
+  const national = {
+    pit: INP.bases.pit + Number(utagSource?.pit || 0),
+    cit: INP.bases.cit + Number(utagSource?.cit || 0),
+    vat: INP.bases.vat + Number(utagSource?.vat || 0),
+  };
+  const gross = national.pit + national.cit + national.vat;
+  const direct = Object.values(categories).reduce((sum, value) => sum + value, 0);
+  const before = gross - direct - result.t.lpa2_env, after = before - result.t.gtf1 - result.t.gtf2;
+  const beforeByTax = {
+    pit: national.pit - directByTax.pit - result.t.lpa2_env,
+    cit: national.cit - directByTax.cit,
+    vat: national.vat - directByTax.vat,
+  };
+  const afterByTax = {
+    pit: beforeByTax.pit - result.t.gtf1_parts.pit - result.t.gtf2_parts.pit,
+    cit: beforeByTax.cit - result.t.gtf1_parts.cit - result.t.gtf2_parts.cit,
+    vat: beforeByTax.vat - result.t.gtf1_parts.vat - result.t.gtf2_parts.vat,
+  };
+  return { scenarioId, mode, categories, national, beforeByTax, afterByTax, level2: result.t.lpa2_env, before, beforePct: before / gross, gtf1: result.t.gtf1, gtf1Pct: result.t.gtf1 / gross, gtf2: result.t.gtf2, gtf2Pct: result.t.gtf2 / gross, after, afterPct: after / gross };
+}
+
+function drawAllocationAnalysis() {
+  const table = $("#allocation-table");
+  const sourceTable = $("#allocation-source-table");
+  if (!table || !sourceTable) return;
+  const colgroup = (widths) => `<colgroup>${widths.map((width) => `<col style="width:${width}%">`).join("")}</colgroup>`;
+  const rows = [];
+  for (const scenarioId of [1, 2, 3]) for (const mode of ["neutral", "optimized"]) rows.push(taxAllocationRow(scenarioId, mode));
+  const sourceHeaders = ["SCENARIO", "VERSION", "PIT_BEFORE_PCT", "CIT_BEFORE_PCT", "VAT_BEFORE_PCT", "PIT_AFTER_PCT", "CIT_AFTER_PCT", "VAT_AFTER_PCT"];
+  sourceTable.innerHTML = `${colgroup([7, 13, 13.3, 13.3, 13.3, 13.3, 13.3, 13.5])}<thead><tr>${sourceHeaders.map((key) => `<th>${esc(tr("ALLOCATION." + key))}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr class="${row.mode}">
+    <td>${row.scenarioId}</td><td>${esc(tr(row.mode === "neutral" ? "ALLOCATION.NEUTRAL" : "ALLOCATION.OPTIMIZED"))}</td>
+    <td>${pct(row.beforeByTax.pit / row.national.pit, 2)}</td><td>${pct(row.beforeByTax.cit / row.national.cit, 2)}</td><td>${pct(row.beforeByTax.vat / row.national.vat, 2)}</td>
+    <td>${pct(row.afterByTax.pit / row.national.pit, 2)}</td><td>${pct(row.afterByTax.cit / row.national.cit, 2)}</td><td>${pct(row.afterByTax.vat / row.national.vat, 2)}</td>
+  </tr>`).join("")}</tbody>`;
+  const headers = ["SCENARIO", "VERSION", "UTAG", "CHISINAU", "BALTI", "TARACLIA", "CENTRES", "OTHER", "GTF1", "GTF2", "AFTER"];
+  table.innerHTML = `${colgroup([6, 12, 8, 9, 7, 7, 10, 10, 8, 7, 16])}<thead><tr>${headers.map((key) => `<th>${esc(tr("ALLOCATION." + key))}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr class="${row.mode}">
+    <td>${row.scenarioId}</td><td>${esc(tr(row.mode === "neutral" ? "ALLOCATION.NEUTRAL" : "ALLOCATION.OPTIMIZED"))}</td>
+    <td>${M(row.categories.utag)}</td><td>${M(row.categories.chisinau)}</td><td>${M(row.categories.balti)}</td><td>${M(row.categories.taraclia)}</td>
+    <td>${M(row.categories.centres)}</td><td>${M(row.categories.other)}</td><td>${M(row.gtf1)}</td><td>${M(row.gtf2)}</td><td>${M(row.after)}</td>
+  </tr>`).join("")}</tbody>`;
+}
+
+function drawGroups() {
+  const aggregate = (R, group, getter) => R.U.filter((unit) => unit.g === group).reduce((total, unit) => total + (getter(unit) || 0), 0);
+  const rows = ["lpa1", "regions", "mun"].map((group) => ({
+    group, baseline: aggregate(C, group, (u) => u.env_current), current: aggregate(C, group, (u) => u.env_new), preset: aggregate(W, group, (u) => u.env_new),
+  }));
+  const sum = (getter) => rows.reduce((total, row) => total + getter(row), 0);
+  const rowHtml = (label, row, cls = "") => `<tr class="${cls}"><td>${esc(label)}</td><td>${M(row.baseline)}</td><td>${M(row.current)}</td><td class="${row.current >= row.baseline ? "up" : "down"}">${sgnM(row.current - row.baseline)}</td><td>${pct(row.current / row.baseline - 1)}</td><td>${M(row.preset)}</td><td class="${same(row.current, row.preset) ? "" : row.current > row.preset ? "up" : "down"}">${same(row.current, row.preset) ? "–" : sgnM(row.current - row.preset)}</td></tr>`;
+  $("#groups").innerHTML = `<colgroup><col style="width:17%">${Array.from({ length: 6 }, () => '<col style="width:13.8333%">').join("")}</colgroup><thead><tr><th>${esc(tr("GROUPS.PART"))}</th><th>${esc(tr("GROUPS.BASELINE"))}</th><th>${esc(tr("GROUPS.NEW_MODEL"))}</th><th>${esc(tr("GROUPS.DIFFERENCE"))}</th><th>%</th><th>${esc(tr("GROUPS.PRESET"))}</th><th>${esc(tr("GROUPS.VS_PRESET"))}</th></tr></thead><tbody>${rows.map((row) => rowHtml(recipientGroupLabel(row.group), row)).join("")}${rowHtml(tr("GROUPS.TOTAL"), { baseline: sum((r) => r.baseline), current: sum((r) => r.current), preset: sum((r) => r.preset) }, "sum")}</tbody>`;
+}
+
+function metricLabel(metricKey) {
+  return tr({ chg: "MAP.METRIC_CHANGE", pc: "MAP.METRIC_PER_RESIDENT", new: "MAP.METRIC_TOTAL", eq: "MAP.METRIC_EQUALISATION", grant: "MAP.METRIC_INCENTIVE", vat2: "MAP.METRIC_VAT2" }[metricKey]);
+}
+
+function formatMapMetric(metricKey, value) {
+  if (metricKey === "chg") return pct(value);
+  if (metricKey === "vat2") return pct(value, 2);
+  if (metricKey === "pc") return tr("MAP.PER_RESIDENT", { amount: nf0.format(value) });
+  return M(value);
+}
+
+function mapLegend(metric, cuts) {
+  if (metric.type === "div") {
+    const keys = ["DISTRIBUTION.BELOW_20", "DISTRIBUTION.MINUS_20_10", "DISTRIBUTION.MINUS_10_0", "DISTRIBUTION.ZERO_10", "DISTRIBUTION.PLUS_10_20", "DISTRIBUTION.ABOVE_20"];
+    return MAP_DIV.map(([, color], index) => `<span><i style="background:${color}"></i>${esc(tr(keys[index]))}</span>`).join("");
+  }
+  if (metric.type === "vatpct") {
+    const keys = ["MAP.LEGEND_UP_TO_1", "MAP.LEGEND_1_TO_2", "MAP.LEGEND_2_TO_3", "MAP.LEGEND_ABOVE_3"];
+    return MAP_VAT2.map(([, color], index) => `<span><i style="background:${color}"></i>${esc(tr(keys[index]))}</span>`).join("");
+  }
+  const format = (value) => formatMapMetric(mapState.metric, value);
+  const labels = [`≤ ${format(cuts[0])}`, `${format(cuts[0])}–${format(cuts[1])}`, `${format(cuts[1])}–${format(cuts[2])}`, `${format(cuts[2])}–${format(cuts[3])}`, `> ${format(cuts[3])}`];
+  return MAP_SEQ.map((color, index) => `<span><i style="background:${color}"></i>${labels[index]}</span>`).join("") + (metric.type === "seq0" ? `<span><i style="background:#eef0ef"></i>${esc(tr("MAP.LEGEND_ZERO"))}</span>` : "");
+}
+
+function drawMapPanel() {
+  const byOrg = mapByOrg(), selected = C.U.find((u) => u.row === tstate.pick), org = mapState.hover || (selected && selected.org1);
+  const item = MAPDATA.units.find((candidate) => String(candidate.org) === String(org)), unit = item ? byOrg.get(String(item.org)) : null, box = $("#mappanel");
+  if (!item || !unit) {
+    box.innerHTML = `<h3>${esc(tr("MAP.EXPLORE"))}</h3><p class="note">${esc(tr("MAP.EXPLORE_TEXT"))}</p>`;
+    return;
+  }
+  if (item.excluded || !unit.g) {
+    box.innerHTML = `<h3>${esc(item.name)}</h3><p class="note">${esc(item.parent)} · ${esc(tr("MAP.OUTSIDE_SIMULATION"))}</p><p>${esc(tr("MAP.UTAG_CONTEXT"))}</p>`;
+    return;
+  }
+  const value = MAP_METRICS[mapState.metric].value(unit), metric = MAP_METRICS[mapState.metric];
+  const vat2Amount = isNum(unit.vat) ? 0.02 * unit.vat : null, vat2Share = isNum(vat2Amount) && unit.total_budget > 0 ? vat2Amount / unit.total_budget : null;
+  box.innerHTML = `<h3>${esc(item.name)}</h3><p class="note">${esc(item.parent)} · org1 ${esc(unit.org1)}</p><div class="map-value ${value < 0 ? "down" : value > 0 && metric.type === "div" ? "up" : ""}">${formatMapMetric(mapState.metric, value)}</div><p class="note">${esc(metricLabel(mapState.metric))}</p><dl>
+    <dt>${esc(tr("MAP.POPULATION"))}</dt><dd>${nf0.format(unit.pop || 0)}</dd><dt>${esc(tr("MAP.TOTAL_BUDGET"))}</dt><dd>${M(unit.total_budget)}</dd>
+    ${mapState.metric === "vat2" ? `<dt>${esc(tr("MAP.VAT2_AMOUNT"))}</dt><dd>${M(vat2Amount)}</dd><dt>${esc(tr("MAP.VAT2_SHARE"))}</dt><dd>${pct(vat2Share, 2)}</dd>` : ""}
+    <dt>${esc(tr("MAP.EQUALISATION"))}</dt><dd>${M(unit.gtf_new)}</dd><dt>${esc(tr("MAP.EQUALISATION_BUDGET"))}</dt><dd>${pct(unit.equalisation_pct)}</dd>
+    <dt>${esc(tr("MAP.FISCAL_INCENTIVE"))}</dt><dd>${M(unit.grant)}</dd><dt>${esc(tr("MAP.INCENTIVE_BUDGET"))}</dt><dd>${pct(unit.incentive_pct)}</dd>
+    <dt>${esc(tr("MAP.BASELINE"))}</dt><dd>${M(unit.env_current)}</dd><dt>${esc(tr("MAP.NEW_MODEL"))}</dt><dd>${M(unit.env_new)}</dd><dt>${esc(tr("MAP.CHANGE"))}</dt><dd class="${unit.chg < 0 ? "down" : unit.chg > 0 ? "up" : ""}">${pct(unit.chg)}</dd></dl>`;
+}
+
+function drawMap() {
+  ensureMap();
+  const byOrg = mapByOrg(), metric = MAP_METRICS[mapState.metric], records = MAPDATA.units.map((item) => mapRecord(item, byOrg));
+  const shownByFilter = (record) => record.u && record.u.g && !record.item.excluded && (mapState.filter === "all" || (mapState.filter === "equalisation" && Number(record.u.gtf_new || 0) > 0.5) || (mapState.filter === "incentive" && Number(record.u.grant || 0) > 0.5));
+  const cuts = mapQuantiles(records.filter(shownByFilter).map(mapValue));
+  const selected = C.U.find((u) => u.row === tstate.pick), selectedOrg = selected ? String(selected.org1) : null;
+  records.forEach((record) => {
+    const path = mapState.paths.get(String(record.item.org)), visible = shownByFilter(record), value = visible ? mapValue(record) : null;
+    path.setAttribute("fill", visible ? mapColor(value, metric, cuts) : "#e2e8e5");
+    path.classList.toggle("active", String(record.item.org) === String(mapState.hover || selectedOrg));
+  });
+  $("#maplegend").innerHTML = mapLegend(metric, cuts) + (mapState.filter === "all" ? "" : `<span><i style="background:#e2e8e5"></i>${esc(tr("MAP.NOT_SELECTED"))}</span>`);
+  const beneficiaryCount = records.filter(shownByFilter).length;
+  const notPlotted = MAPDATA.missing.length ? tr("MAP.NOT_PLOTTED", { unit_list: MAPDATA.missing.join(", ") }) : "";
+  $("#mapcoverage").textContent = tr("MAP.COVERAGE", { beneficiary_count: beneficiaryCount, mapped_count: MAPDATA.mapped, expected_count: MAPDATA.expected, not_plotted: notPlotted });
+  drawMapPanel();
+}
+
+function drawIncentiveList() {
+  const rows = C.U.filter((u) => u.l1 && Number(u.grant || 0) > 0.5).sort((a, b) => b.grant - a.grant);
+  const totalGrant = rows.reduce((sum, unit) => sum + unit.grant, 0);
+  $("#incentive-summary").textContent = tr("INCENTIVE_LIST.SUMMARY", { count: rows.length, amount: money(totalGrant) });
+  $("#incentive-list").innerHTML = `<thead><tr><th>${esc(tr("INCENTIVE_LIST.UAT"))}</th><th>${esc(tr("INCENTIVE_LIST.REGION"))}</th><th>${esc(tr("INCENTIVE_LIST.TOTAL_BUDGET"))}</th><th>${esc(tr("INCENTIVE_LIST.ALLOCATION"))}</th><th>${esc(tr("INCENTIVE_LIST.PERCENTAGE"))}</th></tr></thead><tbody>${rows.map((unit) => `<tr><td>${esc(unit.name)}</td><td class="note">${esc(unit.parent)}</td><td>${M(unit.total_budget)}</td><td>${M(unit.grant)}</td><td>${pct(unit.incentive_pct, 2)}</td></tr>`).join("")}</tbody>`;
+}
+
+function localBins() {
+  return [
+    ["DISTRIBUTION.BELOW_20", (c) => c < -0.2, "loss"], ["DISTRIBUTION.MINUS_20_10", (c) => c >= -0.2 && c < -0.1, "loss"],
+    ["DISTRIBUTION.MINUS_10_0", (c) => c >= -0.1 && c < 0, "loss"], ["DISTRIBUTION.ZERO_10", (c) => c > 0 && c <= 0.1, "win"],
+    ["DISTRIBUTION.PLUS_10_20", (c) => c > 0.1 && c <= 0.2, "win"], ["DISTRIBUTION.ABOVE_20", (c) => c > 0.2, "win"],
+  ];
+}
+
+function drawDist() {
+  const svg = $("#dist");
+  svg.replaceChildren();
+  const bins = localBins(), count = (R) => bins.map(([, predicate]) => R.U.filter((u) => u.l1 && isNum(u.chg) && predicate(u.chg)).length);
+  const current = count(C), preset = count(W), max = Math.max(...current, ...preset, 1), x0 = 20, width = 120, gap = 26, height = 180, baseline = 210;
+  bins.forEach(([key, , kind], index) => {
+    const label = tr(key), x = x0 + index * (width + gap), currentHeight = (current[index] / max) * height, presetHeight = (preset[index] / max) * height;
+    const rectangle = svgEl("rect", { x, y: baseline - currentHeight, width, height: Math.max(currentHeight, 0), rx: 3, fill: `color-mix(in srgb, var(--${kind}) 55%, transparent)` }, svg);
+    svgEl("title", {}, rectangle).textContent = tr("DISTRIBUTION.TOOLTIP", { band: label, current_count: current[index], preset_count: preset[index] });
+    svgEl("rect", { x: x + 1, y: baseline - presetHeight, width: width - 2, height: Math.max(presetHeight, 0), fill: "none", stroke: "var(--fg)", "stroke-width": 1.5, "stroke-dasharray": current[index] === preset[index] ? "none" : "4 3" }, svg);
+    svgEl("text", { x: x + width / 2, y: baseline - Math.max(currentHeight, presetHeight) - 8, "text-anchor": "middle", "font-size": 15, "font-weight": 700, class: "halo" }, svg).textContent = current[index] === preset[index] ? current[index] : `${current[index]} (${preset[index]})`;
+    svgEl("text", { x: x + width / 2, y: baseline + 22, "text-anchor": "middle", "font-size": 13, fill: "var(--muted)" }, svg).textContent = label;
+  });
+  svgEl("line", { x1: 10, x2: 890, y1: baseline, y2: baseline, stroke: "var(--rule-strong)" }, svg);
+}
+
+function unitRows() {
+  return C.U.map((unit, index) => ({ unit, preset: W.U[index] })).filter(({ unit }) => unit.g).map(({ unit, preset }) => ({
+    row: unit.row, name: unit.name, part: unit.level === "I" ? unit.parent : tr("UNIT_DETAIL.LEVEL2"), base: unit.env_current,
+    new: unit.env_new, chg: unit.chg, wb: preset.env_new, dwb: isNum(unit.env_new) && isNum(preset.env_new) && preset.env_new ? unit.env_new / preset.env_new - 1 : null,
+    u: unit, w: preset,
+  }));
+}
+
+function drawUnits() {
+  const query = $("#q").value.trim().toLowerCase(), level = $("#lvl").value;
+  let rows = unitRows().filter((row) => !query || (row.name + " " + row.part).toLowerCase().includes(query));
+  rows = rows.filter((row) => level === "all" || (level === "lpa1" ? row.u.level === "I" : level === "lpa2" ? row.u.level === "II" : level === "lose" ? row.chg < 0 : Math.abs(row.dwb || 0) >= 0.05));
+  const sortKey = tstate.sort;
+  rows.sort((a, b) => (typeof a[sortKey] === "string" ? a[sortKey].localeCompare(b[sortKey], LANG === "ro" ? "ro" : "en") : (a[sortKey] ?? -Infinity) - (b[sortKey] ?? -Infinity)) * tstate.dir);
+  const columns = [["name", "UNITS_LIST.UNIT"], ["part", "UNITS_LIST.PART"], ["base", "UNITS_LIST.BASELINE"], ["new", "UNITS_LIST.NEW_MODEL"], ["chg", "UNITS_LIST.CHANGE"], ["wb", "UNITS_LIST.PRESET"], ["dwb", "UNITS_LIST.VS_PRESET"]];
+  $("#units").innerHTML = `<thead><tr>${columns.map(([column, key]) => `<th><button type="button" data-sort="${column}" aria-sort="${tstate.sort === column ? (tstate.dir > 0 ? "ascending" : "descending") : "none"}">${esc(tr(key))}</button></th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr class="pick${tstate.pick === row.row ? " on" : ""}" data-row="${row.row}" tabindex="0"><td>${esc(row.name)}</td><td class="note">${esc(row.part)}</td><td>${M(row.base)}</td><td>${M(row.new)}</td><td><span class="pill ${row.chg < 0 ? "loss" : row.chg > 0 ? "win" : "tie"}">${row.chg === 0 ? esc(tr("UNITS_LIST.TIE")) : pct(row.chg)}</span></td><td>${M(row.wb)}</td><td class="${Math.abs(row.dwb || 0) < 1e-9 ? "" : row.dwb > 0 ? "up" : "down"}">${Math.abs(row.dwb || 0) < 1e-9 ? "–" : pct(row.dwb)}</td></tr>`).join("")}${rows.length ? "" : `<tr><td colspan="7" class="note">${esc(tr("UNITS_LIST.EMPTY"))}</td></tr>`}</tbody>`;
+  $("#units").querySelectorAll("th button").forEach((button) => button.addEventListener("click", () => {
+    const column = button.dataset.sort;
+    tstate.dir = tstate.sort === column ? -tstate.dir : (column === "name" || column === "part" ? 1 : -1);
+    tstate.sort = column;
+    drawUnits();
+  }));
+  $("#units").querySelectorAll("tr.pick").forEach((row) => {
+    const select = () => { tstate.pick = +row.dataset.row; drawUnits(); drawDetail(); drawMap(); };
+    row.addEventListener("click", select);
+    row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(); } });
+  });
+}
+
+function drawDetail() {
+  const box = $("#detail"), index = C.U.findIndex((unit) => unit.row === tstate.pick);
+  if (index < 0) { box.hidden = true; return; }
+  const unit = C.U[index], preset = W.U[index];
+  box.hidden = false;
+  box.className = "detail";
+  const line = (label, current, reference) => `<span class="k">${esc(label)}</span><span class="v">${M(current)}</span><span class="v">${M(reference)}</span>`;
+  const descriptor = unit.level === "I" ? tr("UNIT_DETAIL.LEVEL1", { parent: unit.parent }) : tr("UNIT_DETAIL.LEVEL2");
+  box.innerHTML = `<div class="head"><h2>${esc(unit.name)} <span class="note">${esc(descriptor)} · org1 ${esc(unit.org1)}</span></h2><button class="btn" type="button" id="dclose">${esc(tr("UNIT_DETAIL.CLOSE"))}</button></div><div class="kv"><span class="h">${esc(tr("UNITS_LIST.PART"))}</span><span class="h v">${esc(tr("UNIT_DETAIL.CURRENT"))}</span><span class="h v">${esc(tr("UNITS_LIST.PRESET"))}</span>${line(tr("UNIT_DETAIL.PIT_SHARE"), unit.direct_pit, preset.direct_pit)}${line(tr("UNIT_DETAIL.CIT_SHARE"), unit.direct_cit, preset.direct_cit)}${line(tr(unit.g === "regions" ? "UNIT_DETAIL.FIXED_LEVEL2" : "UNIT_DETAIL.EQUALISATION"), unit.gtf_new, preset.gtf_new)}${line(tr("UNIT_DETAIL.INCENTIVE"), unit.grant, preset.grant)}<span class="k tot">${esc(tr("UNITS_LIST.NEW_MODEL"))}</span><span class="v tot">${M(unit.env_new)}</span><span class="v tot">${M(preset.env_new)}</span>${line(tr("UNITS_LIST.BASELINE"), unit.env_current, preset.env_current)}<span class="k">${esc(tr("UNITS_LIST.CHANGE"))}</span><span class="v">${pct(unit.chg)}</span><span class="v">${pct(preset.chg)}</span></div>`;
+  $("#dclose").addEventListener("click", () => { tstate.pick = null; drawUnits(); drawDetail(); drawMap(); });
+}
+
+function drawGuide() {
+  const totals = C.t, base = INP.bases, lpa1Count = C.U.filter((u) => u.l1).length;
+  const directShares = sumU(C, (u) => (u.direct_pit || 0) + (u.direct_cit || 0));
+  const culture = sumU(C, (u) => Math.max(u.culture || 0, 0));
+  const steps = [
+    ["GUIDE.STEP1_TITLE", tr("GUIDE.STEP1_TEXT", { pit_amount: money(base.pit + totals.salary_impact_applied), cit_amount: money(base.cit), vat_amount: money(base.vat) })],
+    ["GUIDE.STEP2_TITLE", tr("GUIDE.STEP2_TEXT", { ordinary_pit: P("lpa1_pit"), centre_pit: P("lpa1_centre_pit"), lpa1_cit: P("lpa1_cit"), municipal_pit: P("mun_pit"), taraclia_pit: P("taraclia_pit"), chisinau_cit: P("chisinau_cit"), balti_cit: P("balti_cit"), taraclia_cit: P("taraclia_cit"), amount: money(directShares) })],
+    ["GUIDE.STEP3_TITLE", tr("GUIDE.STEP3_TEXT", { pit_pool: money(totals.pit_pool), cit_pool: money(totals.cit_pool), vat_pool: money(totals.vat_pool) })],
+    ["GUIDE.STEP4_TITLE", tr("GUIDE.STEP4_TEXT", { pit_rate: P("gtf1_pit"), pit_base: money(totals.pit_for_gtf1), cit_rate: P("gtf1_cit"), vat_rate: P("gtf1_vat"), gtf1_total: money(totals.gtf1), level2_envelope: money(totals.level2_envelope), operating_share: P("l2_operating_share"), operating_total: money(totals.operation_total), development_total: money(totals.development_fund), north_amount: money(totals.op_nord), centre_amount: money(totals.op_centru), south_amount: money(totals.op_sud) })],
+    ["GUIDE.STEP5_TITLE", tr("GUIDE.STEP5_TEXT", { grant_share: P("inc_pot"), grant_pot: money(totals.pot), effort_threshold: nf2.format(cur.inc_threshold), cap: P("inc_cap"), amount_paid: money(totals.paid), count: C.U.filter((u) => u.l1 && u.grant > 0).length })],
+    ["GUIDE.STEP6_TITLE", tr("GUIDE.STEP6_TEXT", { remaining_amount: money(totals.gtf1 - totals.paid), count: lpa1Count, population_share: P("k1_pop"), area_share: P("k1_area"), capacity_share: P("k1_cap"), capacity_threshold: nf2.format(cur.cap_mult), gtf2_amount: money(totals.gtf2), region_population_share: P("k2_pop"), region_area_share: P("k2_area") })],
+    ["GUIDE.STEP7_TITLE", tr("GUIDE.STEP7_TEXT", { current_amount: money(totals.base_total), simulated_amount: money(totals.new_total), difference: money(Math.abs(totals.new_total - totals.base_total)), difference_pct: pct(totals.new_total / totals.base_total - 1, 2), more_or_less: tr(totals.new_total >= totals.base_total ? "GUIDE.MORE" : "GUIDE.LESS") })],
+    ["GUIDE.STEP8_TITLE", tr("GUIDE.STEP8_TEXT", { culture_amount: money(culture), baseline_total: money(totals.base_total) })],
+  ];
+  $("#guide").innerHTML = steps.map(([key, text]) => `<li><b>${esc(tr(key))}</b>${esc(text)}</li>`).join("");
+  const ties = C.U.filter((u) => u.l1 && u.chg === 0).length;
+  const tieNote = ties ? tr("DISTRIBUTION.TIE_NOTE", { count: ties }) : "";
+  $("#distnote").textContent = tr("DISTRIBUTION.DESCRIPTION", { count: lpa1Count, first_column: Lt("BS"), last_column: Lt("BY"), tie_note: tieNote });
+}
+
+function drawNotes() {
+  const total = (getter) => sumU(C, getter);
+  const road = total((u) => u.road), lp293 = total((u) => u.lp293), earmarked = total((u) => u.earmarked), education = total((u) => u.edu), compensation = total((u) => u.comp_2025);
+  const ownRevenue = total((u) => u.level === "I" ? (u.local_taxes || 0) + (u.property_tax || 0) : 0);
+  const culture = sumU(C, (u) => Math.max(u.culture || 0, 0));
+  const glossaryTerm = (en, ro) => LANG === "ro" ? ro : en;
+  $("#notes").innerHTML = `<section><h3>${esc(tr("NOTES.UNCHANGED_HEADING"))}</h3>
+    <p>${esc(tr("NOTES.UNCHANGED_INTRO"))}</p><ul>
+      <li>${esc(tr("NOTES.ROAD_TAX", { amount: money(road) }))}</li>
+      <li>${esc(tr("NOTES.LP293", { amount: money(lp293) }))}</li>
+      <li>${esc(tr("NOTES.EARMARKED", { amount: money(earmarked) }))}</li>
+      <li>${esc(tr("NOTES.OWN_REVENUES", { amount: money(ownRevenue) }))}</li>
+      <li>${esc(tr("NOTES.EDUCATION", { amount: money(education) }))}</li>
+      <li>${esc(tr("NOTES.UTAG"))}</li>
+    </ul><p>${esc(tr("NOTES.COMPENSATION_CULTURE", { compensation_amount: money(compensation), culture_amount: money(culture) }))}</p></section>
+    <section><h3>${esc(tr("GLOSSARY.HEADING"))}</h3><dl>
+      <dt>${esc(glossaryTerm("LPA1", "APL I"))}</dt><dd>${esc(tr("GLOSSARY.LPA1", { count: C.U.filter((u) => u.l1).length }))}</dd>
+      <dt>${esc(glossaryTerm("LPA2", "APL II"))}</dt><dd>${esc(tr("GLOSSARY.LPA2"))}</dd>
+      <dt>${esc(glossaryTerm("PIT, CIT, VAT", "IVPF, IVPJ, TVA"))}</dt><dd>${esc(tr("GLOSSARY.TAXES"))}</dd>
+      <dt>${esc(glossaryTerm("GTF1", "FSF"))}</dt><dd>${esc(tr("GLOSSARY.GTF1"))}</dd>
+      <dt>${esc(glossaryTerm("Equalisation key", "Cheia de echilibrare"))}</dt><dd>${esc(tr("GLOSSARY.KEY"))}</dd>
+      <dt>${esc(glossaryTerm("Fiscal capacity", "Capacitate fiscală"))}</dt><dd>${esc(tr("GLOSSARY.CAPACITY"))}</dd>
+      <dt>${esc(glossaryTerm("Fiscal envelope", "Anvelopă fiscală"))}</dt><dd>${esc(tr("GLOSSARY.ENVELOPE"))}</dd>
+      <dt>${esc(glossaryTerm(`Baseline (${Lt("Z")})`, `Valoarea de referință (${Lt("Z")})`))}</dt><dd>${esc(tr("GLOSSARY.BASELINE"))}</dd>
+      <dt>UTAG</dt><dd>${esc(tr("GLOSSARY.UTAG"))}</dd>
+      <dt>${esc(glossaryTerm("Workbook", "Registru de calcul"))}</dt><dd>${esc(tr("GLOSSARY.WORKBOOK", { workbook_name: INP.workbook }))}</dd>
+      <dt>${LANG === "ro" ? "Configurația inițială<br>a scenariului" : esc("Scenario preset")}</dt><dd>${esc(tr("GLOSSARY.PRESET"))}</dd>
+      <dt>${esc(glossaryTerm("Cell references", "Referințe la celule"))}</dt><dd>${esc(tr("GLOSSARY.CELL_REFERENCES", { column_a: Lt("AK"), column_b: Lt("BM"), column_c: Lt("Z") }))}</dd>
+    </dl></section>`;
+  $("#footer").textContent = tr("FOOTER.DATA", { workbook_name: INP.workbook, date: "19.11.2026" });
+}
+
+
+bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayout(); applyScenario(2);
 </script>
 
 
