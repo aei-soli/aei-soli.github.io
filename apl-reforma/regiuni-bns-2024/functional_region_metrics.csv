@@ -1,0 +1,8 @@
+group_id,group_name,units,population_2024,internal_workers,resident_right_bank_jobs,right_bank_jobs_filled,resident_self_containment_pct,job_self_containment_pct,intercommunal_capture_pct,outgoing_to_other_regions,incoming_from_other_regions,left_bank_bender_workers
+FR01,Chișinău–Centru,352,1345883,461543,464298,473948,99.41,97.38,97.48,2755,12405,1030
+FR02,Bălți–Nord,285,556304,132873,139420,134238,95.3,98.98,81.44,6547,1365,41
+FR03,Ungheni–Vest,30,72721,16717,18036,17287,92.69,96.7,72.74,1319,570,5
+FR04,Soroca–Nord-Est,38,60203,13542,14427,13867,93.87,97.66,74.8,885,325,2
+FR05,Orhei–Centru-Nord,95,146250,31677,35379,33520,89.54,94.5,67.12,3702,1843,41
+FR06,Cahul–Sud-Vest,52,103914,27124,28108,27621,96.5,98.2,85.44,984,497,15
+FR07,Comrat–Sud-Est,45,123932,29553,30967,30154,95.43,98.01,76.74,1414,601,62

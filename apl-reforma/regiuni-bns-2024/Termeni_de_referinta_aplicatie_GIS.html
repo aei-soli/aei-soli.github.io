@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Termeni de referință — aplicație GIS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="document_style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Termeni de referință — aplicație GIS</h1>
+</header>
+<h1 id="termeni-de-referință">Termeni de referință</h1>
+<h2
+id="aplicație-gis-pentru-analiza-geografiei-funcționale-a-republicii-moldova">Aplicație
+GIS pentru analiza geografiei funcționale a Republicii Moldova</h2>
+<p><strong>Versiune:</strong> 1.0<br />
+<strong>Data:</strong> 28 august 2026<br />
+<strong>Statut:</strong> document de proiectare pentru prototip și
+dezvoltare ulterioară</p>
+<h2 id="context">1. Context</h2>
+<p>Studiul geografiei funcționale utilizează datele RPL 2024 privind
+populația și navetismul, limite UAT APL I, rețeaua rutieră, centre
+urbane și servicii. Analiza trebuie să poată fi repetată atunci când
+apar date noi și explorată online fără software GIS instalat.</p>
+<p>Aplicația nu este un instrument de trasare automată a limitelor
+administrative. Ea este o platformă de analiză, transparență
+metodologică și comparare de scenarii.</p>
+<h2 id="obiectiv-general">2. Obiectiv general</h2>
+<p>Realizarea unei aplicații web publice care:</p>
+<ul>
+<li>afișează FUA candidate, microregiuni și regiuni funcționale;</li>
+<li>separă clar fluxurile observate de atribuirile modelate;</li>
+<li>permite modificarea parametrilor și recalcularea scenariilor;</li>
+<li>calculează autocontenția, retenția navetismului și
+accesibilitatea;</li>
+<li>oferă exporturi GIS și tabele reproductibile;</li>
+<li>poate fi publicată prin GitHub și Cloudflare.</li>
+</ul>
+<h2 id="grupuri-de-utilizatori">3. Grupuri de utilizatori</h2>
+<ol type="1">
+<li><strong>Public/decident:</strong> vizualizare, căutare, explicații,
+comparație și descărcare.</li>
+<li><strong>Analist:</strong> configurarea parametrilor, rularea
+scenariilor și exportul rezultatelor.</li>
+<li><strong>Administrator de date:</strong> încărcarea versiunilor,
+validarea legăturilor CUATM și publicarea unei versiuni aprobate.</li>
+</ol>
+<h2 id="principii-obligatorii">4. Principii obligatorii</h2>
+<ul>
+<li>UAT APL I este unitatea teritorială de bază.</li>
+<li>Apartenența la raion are pondere zero și nu este barieră.</li>
+<li>Teritoriul din regiunea transnistreană și municipiul Bender este
+exclus din delimitare.</li>
+<li>Fluxurile peste Nistru se pot afișa separat numai dacă sunt
+observate.</li>
+<li>Datele observate și inferența sunt câmpuri distincte în date,
+legendă și interfață.</li>
+<li>Nicio geometrie lipsă nu este inventată; UAT fără poligon rămâne
+punct și intră în calcule.</li>
+<li>Fiecare scenariu păstrează parametrii, sursele, data, autorul și
+indicatorii de validare.</li>
+<li>Rezultatele nu pot fi prezentate ca limite oficiale fără aprobare
+instituțională.</li>
+</ul>
+<h2 id="arhitectura-recomandată">5. Arhitectura recomandată</h2>
+<h3 id="nivel-public-aplicație-statică">5.1 Nivel public — aplicație
+statică</h3>
+<ul>
+<li>MapLibre GL JS pentru randarea hărții în browser;</li>
+<li>HTML/CSS/JavaScript sau o aplicație TypeScript ușoară;</li>
+<li>GeoJSON pentru prototip; PMTiles/vector tiles pentru producție;</li>
+<li>publicare în GitHub, livrare prin Cloudflare Pages/CDN;</li>
+<li>fără autentificare pentru vizualizarea rezultatelor aprobate.</li>
+</ul>
+<h3 id="nivel-analitic-serviciu-de-calcul">5.2 Nivel analitic — serviciu
+de calcul</h3>
+<ul>
+<li>Python cu GeoPandas, NetworkX/igraph, NumPy și un motor de
+rutare;</li>
+<li>API FastAPI cu lucrări asincrone;</li>
+<li>stocare PostgreSQL/PostGIS pentru versiunea multiutilizator;</li>
+<li>coadă de lucrări pentru scenarii costisitoare;</li>
+<li>rezultate versionate în GeoPackage/Parquet/PMTiles.</li>
+</ul>
+<h3 id="nivel-profesional-gis">5.3 Nivel profesional GIS</h3>
+<ul>
+<li>GeoPackage și proiect QGIS pentru QA, corectarea geometriilor,
+tipărire și analiză avansată;</li>
+<li>QGIS nu este eliminat și rămâne instrumentul de referință al
+analistului;</li>
+<li>QGIS Server poate fi evaluat ulterior pentru WMS/WFS, dar nu este
+necesar prototipului static.</li>
+</ul>
+<h2 id="de-ce-maplibre-și-nu-numai-qgis">6. De ce MapLibre și nu numai
+QGIS</h2>
+<p>MapLibre și QGIS îndeplinesc roluri diferite:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Cerință</th>
+<th>MapLibre</th>
+<th>QGIS Desktop</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>utilizare direct în browser</td>
+<td>da</td>
+<td>nu</td>
+</tr>
+<tr>
+<td>publicare pe GitHub/Cloudflare static</td>
+<td>da</td>
+<td>nu direct</td>
+</tr>
+<tr>
+<td>instalare pentru public</td>
+<td>nu</td>
+<td>da</td>
+</tr>
+<tr>
+<td>filtre, scenarii și interfață personalizată</td>
+<td>foarte potrivit</td>
+<td>limitat la interfața desktop/pluginuri</td>
+</tr>
+<tr>
+<td>analiză GIS profesională</td>
+<td>limitată</td>
+<td>foarte bună</td>
+</tr>
+<tr>
+<td>editare și control cartografic</td>
+<td>limitate</td>
+<td>foarte bune</td>
+</tr>
+<tr>
+<td>automatizare server</td>
+<td>necesită backend separat</td>
+<td>QGIS Server necesită infrastructură server</td>
+</tr>
+</tbody>
+</table>
+<p>Decizia este o combinație: <strong>QGIS pentru producție și control
+GIS; MapLibre pentru publicare și interacțiune web</strong>. Dacă s-ar
+utiliza numai QGIS, publicarea ar necesita qgis2web cu funcții limitate
+sau un QGIS Server administrat permanent, care nu se potrivește la fel
+de bine cu găzduirea statică actuală.</p>
+<h2 id="module-funcționale">7. Module funcționale</h2>
+<h3 id="vizualizare-publică">7.1 Vizualizare publică</h3>
+<ul>
+<li>selectarea nivelului: FUA, microregiuni, regiuni funcționale;</li>
+<li>prag FUA 10/15/20%;</li>
+<li>comutatoare pentru centre, fluxuri principale, fluxuri peste Nistru
+și limite UAT;</li>
+<li>legendă dinamică și explicație metodologică;</li>
+<li>identificare prin clic și fișă de indicatori;</li>
+<li>căutare după denumire și CUATM;</li>
+<li>afișarea populației, centrului, timpului, distanței, motivului
+atribuirii și autocontenției;</li>
+<li>descărcare GeoPackage, GeoJSON, CSV, PDF și nota metodologică.</li>
+</ul>
+<h3 id="comparator-de-scenarii">7.2 Comparator de scenarii</h3>
+<ul>
+<li>două hărți sincronizate sau glisor înainte/după;</li>
+<li>matrice de trecere a UAT între scenarii;</li>
+<li>diferențe de populație, suprafață, navetiști reținuți și
+autocontenție;</li>
+<li>evidențierea UAT care își schimbă centrul;</li>
+<li>export al comparației.</li>
+</ul>
+<h3 id="constructor-de-scenarii">7.3 Constructor de scenarii</h3>
+<p>Parametri minimi:</p>
+<ul>
+<li>prag FUA: 5–30%;</li>
+<li>numărul minim/maxim de centre;</li>
+<li>numărul regiunilor mari: 5–9;</li>
+<li>ponderi pentru flux, timp, distanță, servicii și masă
+economică;</li>
+<li>timp maxim orientativ: 30–90 minute;</li>
+<li>cerință de contiguitate;</li>
+<li>ancore obligatorii/opționale;</li>
+<li>includere separată a fluxurilor peste Nistru;</li>
+<li>prag de suprimare a fluxurilor mici pentru publicare.</li>
+</ul>
+<p>Sistemul trebuie să afișeze avertisment dacă ponderile nu însumează
+100%, dacă un centru nu este conectat sau dacă o regiune devine
+discontinuă.</p>
+<h3 id="validare-și-jurnal">7.4 Validare și jurnal</h3>
+<p>Pentru fiecare rulare:</p>
+<ul>
+<li>numărul UAT și populația totală reconciliată;</li>
+<li>UAT fără poligon sau rută;</li>
+<li>componentele teritoriale pentru fiecare zonă;</li>
+<li>ponderea atribuirilor observate/modelate;</li>
+<li>retenția navetismului;</li>
+<li>autocontenția rezidenților și locurilor de muncă;</li>
+<li>distribuția timpilor și distanțelor;</li>
+<li>lista parametrilor și versiunilor surselor;</li>
+<li>hash pentru fișierele de intrare și rezultate.</li>
+</ul>
+<h2 id="specificația-modelului-analitic">8. Specificația modelului
+analitic</h2>
+<h3 id="fua">8.1 FUA</h3>
+<p><code>share(i,c) = commuters(i,c) / employed_residents(i)</code></p>
+<p>O UAT intră dacă ponderea depășește pragul și aparține componentei
+conectate la nucleu. Se publică ponderea exactă și motivul
+includerii.</p>
+<h3 id="microregiuni">8.2 Microregiuni</h3>
+<p>Pentru UAT care nu trec pragul observat:</p>
+<p><code>score(i,c) = wF × flow_share + wT × exp(-time/τ) + wM × centre_mass + wS × service_score</code></p>
+<p>Alocarea finală trebuie să respecte contiguitatea. Valorile implicite
+ale ponderilor vor fi calibrate pe versiunea BNS-commuting-v1, dar rămân
+editabile.</p>
+<h3 id="regiuni-mari">8.3 Regiuni mari</h3>
+<p>Se agregă matricea OD la microregiuni și se maximizează fluxurile
+bidirecționale interne, sub condiții de contiguitate și ancore. Sistemul
+trebuie să poată optimiza:</p>
+<ul>
+<li>autocontenția totală;</li>
+<li>echilibrul minim al populației, dacă utilizatorul îl activează;</li>
+<li>penalizarea timpilor excesivi;</li>
+<li>numărul de regiuni.</li>
+</ul>
+<p>Echilibrarea administrativă este o opțiune de scenariu, nu un
+criteriu funcțional implicit.</p>
+<h2 id="model-de-date-minim">9. Model de date minim</h2>
+<h3 id="uat">UAT</h3>
+<p><code>cuatm</code>, <code>name</code>, <code>population_2024</code>,
+<code>geometry_status</code>, <code>employed_total</code>,
+<code>same_commune</code>, <code>micro_id</code>,
+<code>region_id</code>, <code>centre</code>,
+<code>assignment_reason</code>, <code>time_min</code>,
+<code>distance_km</code>, <code>route_method</code>,
+<code>fua_share_10/15/20</code>.</p>
+<h3 id="flux">Flux</h3>
+<p><code>origin_cuatm</code>, <code>destination_cuatm</code>,
+<code>workers</code>, <code>same_micro</code>, <code>same_region</code>,
+<code>cross_river_flag</code>, <code>year</code>,
+<code>source_version</code>.</p>
+<h3 id="scenariu">Scenariu</h3>
+<p><code>scenario_id</code>, <code>name</code>, <code>status</code>,
+<code>created_at</code>, <code>created_by</code>,
+<code>input_version</code>, <code>parameters_json</code>,
+<code>validation_json</code>, <code>published_at</code>.</p>
+<h2 id="api-propus-pentru-etapa-dinamică">10. API propus pentru etapa
+dinamică</h2>
+<ul>
+<li><code>GET /api/v1/datasets</code> — versiuni disponibile;</li>
+<li><code>GET /api/v1/scenarios</code> — scenarii publicate;</li>
+<li><code>GET /api/v1/scenarios/{id}</code> — metadate și
+indicatori;</li>
+<li><code>GET /api/v1/scenarios/{id}/tiles/{z}/{x}/{y}</code> — vector
+tiles;</li>
+<li><code>GET /api/v1/scenarios/{id}/units/{cuatm}</code> — fișa
+UAT;</li>
+<li><code>POST /api/v1/scenarios</code> — creare rulare;</li>
+<li><code>GET /api/v1/jobs/{id}</code> — progres;</li>
+<li><code>POST /api/v1/scenarios/{id}/publish</code> — publicare cu
+drept de administrator;</li>
+<li><code>GET /api/v1/scenarios/{id}/export?format=gpkg|geojson|csv|pdf</code>
+— export.</li>
+</ul>
+<h2 id="cerințe-nefuncționale">11. Cerințe nefuncționale</h2>
+<ul>
+<li>încărcarea interfeței sub 3 secunde pe conexiune fixă
+obișnuită;</li>
+<li>interacțiune fluentă pentru minimum 900 UAT și 10.000 fluxuri
+agregate;</li>
+<li>design adaptiv pentru desktop, tabletă și telefon;</li>
+<li>navigare prin tastatură, contrast accesibil și texte
+alternative;</li>
+<li>limba română implicit, structură pregătită pentru engleză;</li>
+<li>niciun secret sau token în codul public GitHub;</li>
+<li>API cu rate limiting, validarea fișierelor și roluri pentru
+modificări;</li>
+<li>jurnale și copii de siguranță pentru date și scenarii;</li>
+<li>teste automate pentru reconciliere, contiguitate și indicatori;</li>
+<li>atribuirea surselor și respectarea licențelor.</li>
+</ul>
+<h2 id="publicare-și-securitate">12. Publicare și securitate</h2>
+<p>Prototipul static se publică dintr-un director GitHub prin Cloudflare
+Pages. GeoJSON-urile trebuie să fie pe același domeniu. Pentru
+producție, fișierele mari se transformă în PMTiles și se livrează prin
+CDN.</p>
+<p>Backendul analitic nu trebuie găzduit în GitHub Pages. El va rula
+separat, fără acces direct la sistemul de fișiere public și fără date
+individuale. Se publică numai fluxuri agregate; se stabilește un prag de
+confidențialitate împreună cu BNS.</p>
+<h2 id="livrabile">13. Livrabile</h2>
+<h3 id="etapa-1-prototip-static">Etapa 1 — prototip static</h3>
+<ul>
+<li>hartă MapLibre cu cele trei niveluri și pragurile FUA;</li>
+<li>căutare UAT și fișă de indicatori;</li>
+<li>comutatoare pentru centre/fluxuri;</li>
+<li>descărcări și documentație;</li>
+<li>GeoPackage și proiect QGIS;</li>
+<li>cod sursă publicabil.</li>
+</ul>
+<h3 id="etapa-2-model-parametric">Etapa 2 — model parametric</h3>
+<ul>
+<li>backend de calcul și API;</li>
+<li>constructor de scenarii;</li>
+<li>comparator;</li>
+<li>autentificare pentru analiști;</li>
+<li>export automat și jurnal.</li>
+</ul>
+<h3 id="etapa-3-producție">Etapa 3 — producție</h3>
+<ul>
+<li>PostGIS, vector tiles/PMTiles și monitorizare;</li>
+<li>traducere în engleză;</li>
+<li>testare cu utilizatori și accesibilitate;</li>
+<li>protocol de actualizare anuală și administrare.</li>
+</ul>
+<h2 id="criterii-de-acceptare-pentru-prototip">14. Criterii de acceptare
+pentru prototip</h2>
+<ol type="1">
+<li>Sunt reconciliate 897 UAT și 2.409.207 locuitori.</li>
+<li>Cele cinci UAT fără poligon apar ca punct și în tabel.</li>
+<li>Niciuna dintre cele 32 de microregiuni și șapte regiuni nu este
+discontinuă.</li>
+<li>FUA 10/15/20 folosesc numitorul corect și nu aplică umplere
+recursivă.</li>
+<li>Harta separă observat/modelat și prezintă sursele.</li>
+<li>Utilizatorul poate identifica o UAT și vedea centrul, timpul,
+distanța și metoda traseului.</li>
+<li>Fișierele GIS și tabelele sunt descărcabile.</li>
+<li>Aplicația funcționează în ultimele două versiuni Chrome, Edge,
+Firefox și Safari.</li>
+<li>Nu există erori JavaScript la încărcare și controalele sunt
+utilizabile pe ecran mic.</li>
+<li>Versiunea metodei și data surselor sunt vizibile.</li>
+</ol>
+<h2 id="întrebări-care-necesită-decizie-înaintea-etapei-dinamice">15.
+Întrebări care necesită decizie înaintea etapei dinamice</h2>
+<ul>
+<li>pragul de confidențialitate pentru publicarea fluxurilor mici;</li>
+<li>dacă rezultatul oficial trebuie să păstreze exact șapte regiuni sau
+să compare 5–9;</li>
+<li>dacă se introduce o constrângere explicită de echilibru
+demografic;</li>
+<li>sursa rutieră oficială care poate fi reutilizată și condițiile de
+licență ASD;</li>
+<li>rolurile instituționale pentru aprobarea și publicarea
+scenariilor;</li>
+<li>frecvența de actualizare și bugetul de găzduire al backendului.</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Metodologie — geografia funcțională BNS 2024</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="document_style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Metodologie — geografia funcțională BNS 2024</h1>
+</header>
+<h1
+id="geografia-funcțională-a-republicii-moldova-recalculare-cu-navetismul-bns-2024">Geografia
+funcțională a Republicii Moldova — recalculare cu navetismul BNS
+2024</h1>
+<h2 id="scop-și-statut">1. Scop și statut</h2>
+<p>Acest pachet este o primă delimitare analitică reproductibilă a
+geografiei funcționale pe teritoriul administrat de autoritățile
+constituționale ale Republicii Moldova. El nu propune limite
+administrativ-teritoriale și nu utilizează apartenența la raion drept
+criteriu sau barieră.</p>
+<p>Rezultatul distinge trei niveluri:</p>
+<ol type="1">
+<li><strong>arii urbane funcționale (FUA) candidate</strong> pentru
+Chișinău și Bălți, delimitate strict prin navetism observat;</li>
+<li><strong>32 de microregiuni</strong>, construite din fluxuri
+observate, accesibilitate rutieră și contiguitate;</li>
+<li><strong>7 regiuni funcționale provizorii</strong>, construite din
+matricea completă origine–destinație agregată la microregiuni.</li>
+</ol>
+<p>Toate delimitările sunt rezultate analitice și trebuie validate
+instituțional și local înainte de a fi folosite normativ.</p>
+<h2 id="universul-teritorial">2. Universul teritorial</h2>
+<ul>
+<li>897 UAT APL I din baza recensământului 2024;</li>
+<li>populație cu reședință obișnuită: <strong>2.409.207
+persoane</strong>;</li>
+<li>892 UAT au un poligon OSM reconciliat;</li>
+<li>5 UAT fără limită OSM sigură sunt păstrate ca puncte: Chetriș,
+Hîncești (Fălești), Sărata-Răzeși, Sîrma și Tochile-Răducani;</li>
+<li>localitățile din regiunea transnistreană și municipiul Bender nu
+sunt incluse în delimitări;</li>
+<li>fluxurile raportate către stânga Nistrului/Bender sunt păstrate
+separat, fără a extinde automat regiunile peste Nistru.</li>
+</ul>
+<h2 id="date-utilizate">3. Date utilizate</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Set de date</th>
+<th>Utilizare</th>
+<th>Statut în model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BNS, RPL 2024, tabelul 8.3</td>
+<td>populația cu reședință obișnuită la nivel de comună/oraș</td>
+<td>observat/oficial</td>
+</tr>
+<tr>
+<td>BNS, matricea localitate de reședință × localitate a locului de
+muncă</td>
+<td>navetism, dependență de centru, autocontenție</td>
+<td>observat/oficial</td>
+</tr>
+<tr>
+<td>GHSL Urban Centre Database 2025, R2024A</td>
+<td>geometria nucleelor urbane Chișinău și Bălți</td>
+<td>observat/model global</td>
+</tr>
+<tr>
+<td>OpenStreetMap</td>
+<td>limite UAT, drumuri, puncte de servicii și localități</td>
+<td>date colaborative; proxy</td>
+</tr>
+<tr>
+<td>Administrația Națională a Drumurilor, harta ASD</td>
+<td>control al clasificării și traseelor drumurilor</td>
+<td>sursă oficială de validare; nu este redistribuită</td>
+</tr>
+</tbody>
+</table>
+<p>Surse online:</p>
+<ul>
+<li>BNS, distribuția populației pe localități: <a
+href="https://statistica.gov.md/ro/rezultatele-finale-ale-recensamantului-populatiei-si-locuintelor-2024-distributi-10121_62380.html"
+class="uri">https://statistica.gov.md/ro/rezultatele-finale-ale-recensamantului-populatiei-si-locuintelor-2024-distributi-10121_62380.html</a></li>
+<li>BNS, caracteristici economice și navetism: <a
+href="https://statistica.gov.md/ro/rezultatele-finale-ale-recensamantului-populatiei-si-locuintelor-2024-caracteris-10121_62102.html"
+class="uri">https://statistica.gov.md/ro/rezultatele-finale-ale-recensamantului-populatiei-si-locuintelor-2024-caracteris-10121_62102.html</a></li>
+<li>GHSL Urban Centre Database 2025: <a
+href="https://data.jrc.ec.europa.eu/dataset/1a338be6-7eaf-480c-9664-3a8ade88cbcd"
+class="uri">https://data.jrc.ec.europa.eu/dataset/1a338be6-7eaf-480c-9664-3a8ade88cbcd</a></li>
+<li>OpenStreetMap și licența ODbL: <a
+href="https://www.openstreetmap.org/copyright"
+class="uri">https://www.openstreetmap.org/copyright</a></li>
+<li>harta drumurilor ASD: <a href="https://harta.asd.md/"
+class="uri">https://harta.asd.md/</a></li>
+</ul>
+<p>Important: produsul global GHS-FUA publicat de JRC este încă aferent
+epocii 2015. În acest pachet, GHSL 2025 furnizează numai nucleele
+urbane; zonele de navetism sunt recalculate din datele BNS 2024.</p>
+<h2 id="reconcilierea-geografică">4. Reconcilierea geografică</h2>
+<p>Cheia principală este codul CUATM din recensământ. Denumirile BNS au
+fost normalizate numai pentru legare. Au fost corectate explicit două
+variante istorice/ortografice: „Hligeni” → Glinjeni și „Carabetovka” →
+Carabetovca.</p>
+<p>Pentru perechile urban/rural cu aceeași denumire — Dondușeni,
+Drochia, Ghindești, Mărculești, Ocnița și Cornești — poligonul urban a
+fost ales prin densitate plauzibilă și concordanță CUATM, iar poligonul
+rural prin geometria rămasă. Astfel au fost eliminate contururile
+albe/anormale din versiunea anterioară.</p>
+<h2 id="fua-candidate">5. FUA candidate</h2>
+<p>Pentru fiecare UAT de origine <code>i</code> și nucleu urban
+<code>c</code>:</p>
+<p><code>P(i,c) = navetiști(i → c) / total rezidenți ocupați(i)</code></p>
+<p>Sunt publicate trei praguri de sensibilitate: 10%, 15% și 20%. Pragul
+principal este 15%, conform logicii EU–OECD. Nucleul este inclus
+întotdeauna. Dintre unitățile care trec pragul se păstrează numai
+componenta teritorială conectată la nucleu. Nu se aplică umplere
+recursivă a enclavelor.</p>
+<p>La pragul de 15%:</p>
+<ul>
+<li>FUA Chișinău: 147 UAT, 1.004.193 locuitori;</li>
+<li>FUA Bălți: 39 UAT, 160.882 locuitori.</li>
+</ul>
+<p>Aceste valori descriu o relație de navetism directă cu nucleul, nu
+întreaga arie de influență economică indirectă.</p>
+<h2 id="microregiuni">6. Microregiuni</h2>
+<p>Centrele candidate sunt selectate din localitățile urbane printr-un
+scor de centralitate care combină:</p>
+<ul>
+<li>populația 2024;</li>
+<li>locurile de muncă ocupate de rezidenți ai teritoriului
+analizat;</li>
+<li>navetismul intercomunal primit;</li>
+<li>servicii OSM de educație, sănătate, comerț/finanțe și
+administrație.</li>
+</ul>
+<p>Chișinău, Bălți, Ungheni, Soroca, Orhei, Cahul și Comrat sunt ancore
+regionale obligatorii. Centrele foarte slabe sunt eliminate dacă
+atribuirea lor nu formează o zonă coerentă.</p>
+<p>Alocarea UAT urmează două trepte:</p>
+<ol type="1">
+<li><strong>observată</strong>: minimum 15% dintre rezidenții ocupați
+lucrează în centrul ales;</li>
+<li><strong>modelată</strong>: pentru unitățile rămase se combină fluxul
+observat către centru, timpul rutier, masa centrului și
+contiguitatea.</li>
+</ol>
+<p>Rezultatul are 32 de microregiuni contigue. Din navetismul
+intercomunal de pe teritoriul analizat, <strong>76,54%</strong> rămâne
+în aceeași microregiune. 468 UAT sunt atribuite prin regula observată de
+15%, 397 prin model și 32 sunt centre.</p>
+<h2 id="timp-și-distanță">7. Timp și distanță</h2>
+<p>Drumurile OSM sunt transformate într-un graf rutabil. Timpul este
+suma lungimilor segmentelor împărțite la viteze orientative pe clase de
+drum; distanța este lungimea traseului cu cel mai mic timp.</p>
+<ul>
+<li>889 UAT: traseu rutier OSM;</li>
+<li>8 UAT: aproximare în linie dreaptă, marcată
+<code>straight_line_fallback</code>;</li>
+<li>mediană: 20,4 minute și 22,4 km;</li>
+<li>percentila 95: 54,6 minute și 64,8 km;</li>
+<li>maxim: 75,9 minute și 91,1 km.</li>
+</ul>
+<p>Timpii sunt proxy-uri de accesibilitate cu automobilul, nu durate
+observate și nu includ congestia, orarele transportului public, starea
+sezonieră a drumului sau traversări cu regim special.</p>
+<h2 id="regiuni-funcționale-mari">8. Regiuni funcționale mari</h2>
+<p>Fluxurile sunt agregate la cele 32 de microregiuni. Cele șapte
+regiuni sunt extinse contiguu de la ancorele Chișinău, Bălți, Ungheni,
+Soroca, Orhei, Cahul și Comrat, maximizând fluxurile bidirecționale
+interne și folosind accesibilitatea doar ca termen secundar.</p>
+<p>Indicatorii principali sunt:</p>
+<ul>
+<li>autocontenția rezidenților: ponderea rezidenților regiunii care
+lucrează în regiune;</li>
+<li>autocontenția locurilor de muncă: ponderea locurilor de muncă din
+regiune ocupate de rezidenții regiunii;</li>
+<li>retenția navetismului intercomunal: ponderea navetismului dintre UAT
+care rămâne în regiune.</li>
+</ul>
+<p>La nivel național, cele șapte regiuni rețin <strong>90,05%</strong>
+din navetismul intercomunal. Diferențele mari de populație și suprafață
+sunt un rezultat al centralizării fluxurilor, nu un obiectiv de
+echilibrare administrativă.</p>
+<h2 id="limitări">9. Limitări</h2>
+<ul>
+<li>Navetismul este o măsură foarte importantă, dar nu acoperă fluxurile
+comerciale, de pacienți, elevi/studenți, marfă sau telefonie
+mobilă.</li>
+<li>Geometriile OSM nu sunt limite oficiale și cinci UAT nu au încă
+poligon sigur.</li>
+<li>Vitezele rutiere sunt valori modelate; harta ASD este folosită
+pentru control, dar datele sale vectoriale nu sunt redistribuite până la
+clarificarea licenței.</li>
+<li>Un prag FUA unic poate supraestima influența unui centru în UAT cu
+puțini rezidenți ocupați; de aceea sunt prezentate 10/15/20%.</li>
+<li>Atribuirile modelate trebuie afișate separat de cele observate.</li>
+<li>Rezultatul este sensibil la numărul și alegerea ancorelor regionale.
+O versiune viitoare trebuie să permită compararea automată a soluțiilor
+cu 5–9 regiuni.</li>
+</ul>
+<h2 id="fișiere-principale">10. Fișiere principale</h2>
+<ul>
+<li><code>moldova_functional_geography_bns_2024.gpkg</code> — GeoPackage
+cu toate straturile;</li>
+<li><code>moldova_functional_geography_bns_2024.qgs</code> — proiect
+QGIS;</li>
+<li><code>Harti_recalculate_navetism_BNS_2024.pdf</code> — trei pagini
+de hărți;</li>
+<li><code>local_unit_assignments_bns_2024.csv</code> — atribuiri, timp,
+distanță și motiv;</li>
+<li><code>micro_region_metrics.csv</code>,
+<code>functional_region_metrics.csv</code>,
+<code>fua_threshold_summary.csv</code> — indicatori;</li>
+<li><code>commuting_od_matrix_cuatm.csv.gz</code> — matricea OD pe
+coduri CUATM;</li>
+<li><code>validation_metrics.json</code> — sumar de control;</li>
+<li><code>aplicatie/</code> — prima versiune web MapLibre.</li>
+<li><code>harta_interactiva_geografie_functionala_BNS_2024.html</code> —
+aceeași aplicație într-un singur fișier HTML, cu datele
+încorporate.</li>
+</ul>
+<h2 id="reproducere">11. Reproducere</h2>
+<p>Scriptul sursă este
+<code>work/functional_recalculation/recalculate_functional_geography.py</code>.
+El reconstruiește baza, matricele de rutare, atribuirile, indicatorii,
+GeoPackage-ul și hărțile. Orice versiune publicată trebuie să păstreze
+versiunea metodei, data surselor și un jurnal al parametrilor.</p>
+</body>
+</html>
