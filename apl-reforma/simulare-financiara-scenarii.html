@@ -2141,6 +2141,18 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
   #lpf-print-panel .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
   #lpf-print-panel .tip { font-size: 11.5px; color: #6b7873; margin-top: 10px; }
   #lpf-print-report { display: none; }
+  /* equity box next to the distribution heading (added 24 Nov 2026) */
+  .lpf-dist-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; }
+  .lpf-dist-head h2 { margin: 0; }
+  .lpf-eq { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 0.78rem; line-height: 1.3;
+    padding: 4px 10px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--fg, #1d2a26) 16%, transparent);
+    background: color-mix(in srgb, var(--fg, #1d2a26) 4%, transparent); cursor: help; }
+  .lpf-eq b { font-weight: 650; }
+  .lpf-eq .t { font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 0.68rem; opacity: .75; }
+  .lpf-eq .v { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lpf-eq .up { color: var(--win, #1f7a4d); font-weight: 700; }
+  .lpf-eq .down { color: var(--loss, #a9382d); font-weight: 700; }
+  .lpf-eq .eq0 { opacity: .7; }
 
   @media print {
     @page { size: A4 portrait; margin: 11mm 11mm 12mm; }
@@ -2241,6 +2253,8 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
         <p><b>FSF2</b>: procent din IVPF național, distribuit între cele trei regiuni după populație și suprafață.</p>
         <p><b>Echitate</b>: coeficientul de variație ponderat cu populația și raportul maxim/minim al alocării comparabile pe locuitor, pentru cele 245 APL I.</p>`,
       none: "—",
+      eqTitle: "Echitate", eqCv: "Dispersie", eqMm: "Max/min",
+      eqTip: "Indicatori de echitate pentru cele 245 APL I, calculați pe alocarea comparabilă pe locuitor: dispersia este coeficientul de variație ponderat cu populația; max/min este raportul dintre cea mai mare și cea mai mică alocare pe locuitor. Prima valoare: 2025; a doua: scenariul curent. Valori mai mici = distribuție mai echitabilă.",
     },
     en: {
       btn: "Print / Save PDF", panelTitle: "Scenario report — print / PDF",
@@ -2278,6 +2292,8 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
         <p><b>FSF2</b>: a percentage of national PIT, distributed among the three regions by population and area.</p>
         <p><b>Equity</b>: population-weighted coefficient of variation and maximum/minimum ratio of the comparable allocation per resident, for the 245 LPA1.</p>`,
       none: "—",
+      eqTitle: "Equity", eqCv: "Dispersion", eqMm: "Max/min",
+      eqTip: "Equity indicators for the 245 LPA1, on the comparable allocation per resident: dispersion is the population-weighted coefficient of variation; max/min is the ratio of the highest to the lowest allocation per resident. First value: 2025; second: the current scenario. Lower values = a more equal distribution.",
     },
   };
   const isEn = () => typeof LANG !== "undefined" && LANG === "en";
@@ -2557,9 +2573,45 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
     window.addEventListener("afterprint", restore);
   }
 
+  // ------------------------------------------------------------------ live equity box
+  function renderEquityBox() {
+    const card = document.querySelector(".compact-distribution");
+    if (!card || typeof C === "undefined" || !C || !C.U) return;
+    let head = card.querySelector(".lpf-dist-head");
+    if (!head) {
+      const h2 = card.querySelector("h2"); if (!h2) return;
+      head = document.createElement("div"); head.className = "lpf-dist-head";
+      h2.replaceWith(head); head.appendChild(h2);
+      const box = document.createElement("div"); box.className = "lpf-eq"; box.setAttribute("role", "note"); head.appendChild(box);
+    }
+    const l1 = unitsL1(); if (!l1.length) return;
+    const w = l1.map((u) => u.pop);
+    const now = equity(l1.map((u) => u.env_new / u.pop), w), old = equity(l1.map((u) => u.env_current / u.pop), w);
+    const t = L(), dir = (a, b) => (Math.abs(b - a) < 1e-9 ? "eq0" : b < a ? "up" : "down");   // lower = more equal
+    const box = head.querySelector(".lpf-eq");
+    box.title = t.eqTip;
+    box.innerHTML = `<span class="t">${esc(t.eqTitle)}</span>
+      <span class="v">${esc(t.eqCv)} <b>${num(old.cv * 100, 1)}%</b> → <b class="${dir(old.cv, now.cv)}">${num(now.cv * 100, 1)}%</b></span>
+      <span class="v">${esc(t.eqMm)} <b>${num(old.mm, 2)}×</b> → <b class="${dir(old.mm, now.mm)}">${num(now.mm, 2)}×</b></span>`;
+  }
+  function watchEquity() {
+    const card = document.querySelector(".compact-distribution");
+    if (!card) return;
+    renderEquityBox();
+    // the distribution chart is redrawn on every recalculation; refresh the box with it
+    const target = card.querySelector(".scroll") || card;
+    let pending = false;
+    new MutationObserver(() => { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; renderEquityBox(); }); })
+      .observe(target, { childList: true, subtree: true, characterData: true, attributes: true });
+    document.getElementById("language-toggle")?.addEventListener("click", () => setTimeout(renderEquityBox, 0));
+    document.getElementById("salary-policy-toggle")?.addEventListener("change", () => setTimeout(renderEquityBox, 0));
+  }
+
+  window.lpfRenderEquity = renderEquityBox;
   window.lpfPrintPrepare = prepare;
   window.lpfPrintRestore = restore;
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", install); else install();
+  const start = () => { install(); watchEquity(); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
 </script>
 
