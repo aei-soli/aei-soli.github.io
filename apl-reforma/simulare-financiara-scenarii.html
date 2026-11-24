@@ -2153,6 +2153,7 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
   .lpf-eq .up { color: var(--win, #1f7a4d); font-weight: 700; }
   .lpf-eq .down { color: var(--loss, #a9382d); font-weight: 700; }
   .lpf-eq .eq0 { opacity: .7; }
+  .lpf-cult { margin: 8px 0 0; font-size: 0.8rem; line-height: 1.4; opacity: .85; }
 
   @media print {
     @page { size: A4 portrait; margin: 11mm 11mm 12mm; }
@@ -2195,6 +2196,7 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
     #lpf-print-report .bar { display: inline-block; height: 2.4mm; vertical-align: middle; border-radius: .4mm; }
     #lpf-print-report .kpi td.n:last-child { font-weight: 700; }
     #lpf-print-report .caveat { font-size: 7.4pt; background: #fff6e0; border: .2mm solid #f0d9a0; border-radius: 1.2mm; padding: 1.2mm 2mm; margin: 2mm 0 0; color: #5d3a00; }
+    #lpf-print-report .cult { font-size: 7pt; color: #4d5b56; margin: .8mm 0 0; }
     #lpf-print-report .foot { font-size: 6.8pt; color: #6b7873; margin-top: 2mm; }
     #lpf-print-report .mapwrap { display: grid; grid-template-columns: 1.25fr 1fr; gap: 5mm; align-items: start; }
     #lpf-print-report .mapwrap svg { width: 100%; height: auto; max-height: 190mm; }
@@ -2254,6 +2256,7 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
         <p><b>Echitate</b>: coeficientul de variație ponderat cu populația și raportul maxim/minim al alocării comparabile pe locuitor, pentru cele 245 APL I.</p>`,
       none: "—",
       eqTitle: "Echitate", eqCv: "Dispersie", eqMm: "Max/min",
+      cult: (a) => `Referința 2025 include transferul pentru instituțiile de cultură: ${a} M lei trecuți de la raioane (viitoarele regiuni) la APL I, conform foii „Culture 2025”. Suma totală a anvelopei nu se schimbă; se mută doar între niveluri.`,
       eqTip: "Indicatori de echitate pentru cele 245 APL I, calculați pe alocarea comparabilă pe locuitor: dispersia este coeficientul de variație ponderat cu populația; max/min este raportul dintre cea mai mare și cea mai mică alocare pe locuitor. Prima valoare: 2025; a doua: scenariul curent. Valori mai mici = distribuție mai echitabilă.",
     },
     en: {
@@ -2293,6 +2296,7 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
         <p><b>Equity</b>: population-weighted coefficient of variation and maximum/minimum ratio of the comparable allocation per resident, for the 245 LPA1.</p>`,
       none: "—",
       eqTitle: "Equity", eqCv: "Dispersion", eqMm: "Max/min",
+      cult: (a) => `The 2025 reference includes the culture transfer: MDL ${a} million for culture institutions moved from the raions (future regions) to LPA1, per sheet “Culture 2025”. The envelope total is unchanged; the money only moves between levels.`,
       eqTip: "Equity indicators for the 245 LPA1, on the comparable allocation per resident: dispersion is the population-weighted coefficient of variation; max/min is the ratio of the highest to the lowest allocation per resident. First value: 2025; second: the current scenario. Lower values = a more equal distribution.",
     },
   };
@@ -2391,6 +2395,7 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
         <div>
           <table><thead><tr><th>${esc(t.hEnv)}</th><th class="n">${t.base}</th><th class="n">${t.sim}</th><th class="n">${t.diff}</th><th class="n">${t.pct}</th></tr></thead>
           <tbody>${R.groups.map(([n, g]) => envRow(n, g)).join("")}${envRow(t.gTot, R.total, "tot")}</tbody></table>
+          <p class="cult">${esc(t.cult(mil(cultureMoved())))}</p>
           <table style="margin-top:2mm"><thead><tr><th>${esc(t.hFunds)}</th><th class="n">M lei</th><th>&nbsp;</th></tr></thead><tbody>
             <tr><td>${esc(t.fsf1)}</td><td class="n"><b>${mil(C.t.gtf1)}</b></td><td>${esc(t.fsf1c(num(cur.gtf1_pit * 100, 1) + "%", num(cur.gtf1_vat * 100, 1) + "%"))}</td></tr>
             <tr><td>${esc(t.pot)}</td><td class="n">${mil(C.t.paid)}</td><td>${esc(t.potBen(R.grantN))}</td></tr>
@@ -2573,6 +2578,15 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
     window.addEventListener("afterprint", restore);
   }
 
+  // culture institutions moved from the raions to LPA1 in the 2025 reference (datasheet Z / sheet "Culture 2025")
+  const cultureMoved = () => sum(INP.units.filter((u) => u.level === "I" && u.meta !== "X"), (u) => Number(u.culture) || 0);
+  function renderCultureNote() {
+    const card = document.querySelector(".envelope-card"); if (!card) return;
+    let n = card.querySelector(".lpf-cult");
+    if (!n) { n = document.createElement("p"); n.className = "note lpf-cult"; (card.querySelector(".envelope-head > div") || card).appendChild(n); }
+    n.textContent = L().cult(mil(cultureMoved()));
+  }
+
   // ------------------------------------------------------------------ live equity box
   function renderEquityBox() {
     const card = document.querySelector(".compact-distribution");
@@ -2603,7 +2617,8 @@ bindLanguageToggle(); bindSalaryToggle(); applyStaticText(); prepareCompactLayou
     let pending = false;
     new MutationObserver(() => { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; renderEquityBox(); }); })
       .observe(target, { childList: true, subtree: true, characterData: true, attributes: true });
-    document.getElementById("language-toggle")?.addEventListener("click", () => setTimeout(renderEquityBox, 0));
+    document.getElementById("language-toggle")?.addEventListener("click", () => setTimeout(() => { renderEquityBox(); renderCultureNote(); }, 0));
+    renderCultureNote();
     document.getElementById("salary-policy-toggle")?.addEventListener("change", () => setTimeout(renderEquityBox, 0));
   }
 
