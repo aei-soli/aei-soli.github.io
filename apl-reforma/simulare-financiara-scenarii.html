@@ -1531,9 +1531,9 @@ function bindLanguageToggle() {
 // Presets expressed as shares of the national tax totals. The optimized rates
 // preserve, to the nearest 0.5 percentage point, the previous optimized fund
 // amounts when moving from residual-pool denominators to national denominators.
-Object.assign(SCENARIOS[1], { neutral_pit: 0.070, neutral_vat: 0.045, optimized_pit: 0.075, optimized_vat: 0.090,
+Object.assign(SCENARIOS[1], { neutral_pit: 0.070, neutral_vat: 0.045, optimized_pit: 0.105, optimized_vat: 0.070,   // 26.11.2026: 50:50 PIT:VAT
   optimized_k1_pop: 0.50, optimized_k1_area: 0.30, optimized_k1_cap: 0.20 });   // 25.11.2026: common optimized key
-Object.assign(SCENARIOS[2], { neutral_pit: 0.115, neutral_vat: 0.075, optimized_pit: 0.150, optimized_vat: 0.075,
+Object.assign(SCENARIOS[2], { neutral_pit: 0.115, neutral_vat: 0.075, optimized_pit: 0.135, optimized_vat: 0.085,   // 26.11.2026: 51:49 PIT:VAT
   // 24.11.2026: re-optimized key for the optimized fund (population / area / capacity gap); threshold stays 1.3
   optimized_k1_pop: 0.50, optimized_k1_area: 0.30, optimized_k1_cap: 0.20 });
 // the FSF1 key used by a scenario in a given mode.
